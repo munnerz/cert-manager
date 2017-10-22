@@ -18,6 +18,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
 
+<<<<<<< HEAD
 	"github.com/jetstack-experimental/cert-manager/cmd/controller/app/options"
 	clientset "github.com/jetstack-experimental/cert-manager/pkg/client/clientset/versioned"
 	intscheme "github.com/jetstack-experimental/cert-manager/pkg/client/clientset/versioned/scheme"
@@ -26,6 +27,14 @@ import (
 	"github.com/jetstack-experimental/cert-manager/pkg/controller/clusterissuers"
 	"github.com/jetstack-experimental/cert-manager/pkg/issuer"
 	kubeinformers "github.com/jetstack-experimental/cert-manager/third_party/k8s.io/client-go/informers"
+=======
+	"github.com/jetstack/cert-manager/cmd/controller/app/options"
+	clientset "github.com/jetstack/cert-manager/pkg/client/clientset"
+	intscheme "github.com/jetstack/cert-manager/pkg/client/clientset/scheme"
+	"github.com/jetstack/cert-manager/pkg/controller"
+	"github.com/jetstack/cert-manager/pkg/issuer"
+	"github.com/jetstack/cert-manager/pkg/util/kube"
+>>>>>>> Move to github.com/jetstack/cert-manager repo
 )
 
 const controllerAgentName = "cert-manager-controller"
