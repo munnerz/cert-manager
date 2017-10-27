@@ -27,34 +27,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/juju/ratelimit"
-
-[[constraint]]
-  name = "github.com/stretchr/testify"
-  version = "1.1.4"
-
-[[constraint]]
-  name = "github.com/xenolf/lego"
-  version = "0.4.0"
-
-[[constraint]]
-  branch = "master"
-  name = "golang.org/x/crypto"
-
-[[constraint]]
-  branch = "master"
-  name = "golang.org/x/net"
-
-[[constraint]]
-  branch = "master"
-  name = "golang.org/x/oauth2"
-
-[[constraint]]
-  branch = "master"
-  name = "google.golang.org/api"
-
-[[constraint]]
-  branch = "master"
   name = "k8s.io/api"
 
 [[constraint]]
