@@ -184,26 +184,8 @@ const (
 func init() {
 	controllerpkg.Register(ControllerName, func(ctx *controllerpkg.Context) controllerpkg.Interface {
 		return New(
-			ctx.SharedInformerFactory.InformerFor(
-				ctx.Namespace,
-				metav1.GroupVersionKind{Group: certmanager.GroupName, Version: "v1alpha1", Kind: "Issuer"},
-				cminformers.NewIssuerInformer(
-					ctx.CMClient,
-					ctx.Namespace,
-					time.Second*30,
-					cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
-				),
-			),
-			ctx.SharedInformerFactory.InformerFor(
-				ctx.Namespace,
-				metav1.GroupVersionKind{Version: "v1", Kind: "Secret"},
-				coreinformers.NewSecretInformer(
-					ctx.Client,
-					ctx.Namespace,
-					time.Second*30,
-					cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
-				),
-			),
+			ctx.SharedInformerFactory.Certmanager().V1alpha1().Issuers().Informer(),
+			ctx.KubeSharedInformerFactory.Core().V1().Secrets().Informer(),
 			ctx.Client,
 			ctx.CMClient,
 			ctx.IssuerFactory,

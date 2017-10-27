@@ -5,7 +5,8 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"github.com/jetstack-experimental/cert-manager/pkg/client/clientset"
-	"github.com/jetstack-experimental/cert-manager/pkg/util/kube"
+	"github.com/jetstack-experimental/cert-manager/pkg/client/informers"
+	kubeinformers "github.com/jetstack-experimental/cert-manager/third_party/informers"
 )
 
 // Context contains various types that are used by Issuer implementations.
@@ -19,9 +20,11 @@ type Context struct {
 	CMClient clientset.Interface
 	// Recorder is an EventRecorder to log events to
 	Recorder record.EventRecorder
+
+	KubeSharedInformerFactory kubeinformers.SharedInformerFactory
 	// SharedInformerFactory can be used to obtain shared SharedIndexInformer
 	// instances
-	SharedInformerFactory kube.SharedInformerFactory
+	SharedInformerFactory informers.SharedInformerFactory
 
 	// Namespace is a namespace to operate within. This should be used when
 	// constructing SharedIndexInformers for the informer factory.

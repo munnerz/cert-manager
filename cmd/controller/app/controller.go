@@ -20,9 +20,11 @@ import (
 	"github.com/jetstack-experimental/cert-manager/cmd/controller/app/options"
 	clientset "github.com/jetstack-experimental/cert-manager/pkg/client/clientset"
 	intscheme "github.com/jetstack-experimental/cert-manager/pkg/client/clientset/scheme"
+	"github.com/jetstack-experimental/cert-manager/pkg/client/informers"
 	"github.com/jetstack-experimental/cert-manager/pkg/controller"
 	"github.com/jetstack-experimental/cert-manager/pkg/issuer"
 	"github.com/jetstack-experimental/cert-manager/pkg/util/kube"
+	"time"
 )
 
 const controllerAgentName = "cert-manager-controller"
@@ -106,7 +108,7 @@ func buildControllerContext(opts *options.ControllerOptions) (*controller.Contex
 	eventBroadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: cl.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: controllerAgentName})
 
-	sharedInformerFactory := kube.NewSharedInformerFactory()
+	sharedInformerFactory := informers.NewSharedInformerFactory(intcl, opts.Namespace, time.Second*30)
 	return &controller.Context{
 		Client:                cl,
 		CMClient:              intcl,

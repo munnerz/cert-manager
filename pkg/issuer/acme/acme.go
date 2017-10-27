@@ -3,13 +3,10 @@ package acme
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/golang/glog"
 	"golang.org/x/crypto/acme"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	coreinformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -141,10 +138,7 @@ func init() {
 			ctx.Recorder,
 			resourceNamespace,
 			ctx.ACMEHTTP01SolverImage,
-			ctx.SharedInformerFactory.InformerFor(
-				informerNS,
-				metav1.GroupVersionKind{Version: "v1", Kind: "Secret"},
-				coreinformers.NewSecretInformer(ctx.Client, resourceNamespace, time.Second*30, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})),
+			ctx.KubeSharedInformerFactory.Core().V1().Secrets().Informer(),
 		)
 	})
 }

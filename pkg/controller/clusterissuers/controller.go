@@ -9,19 +9,15 @@ import (
 	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	coreinformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/jetstack-experimental/cert-manager/pkg/apis/certmanager"
 	"github.com/jetstack-experimental/cert-manager/pkg/client/clientset"
-	cminformers "github.com/jetstack-experimental/cert-manager/pkg/client/informers/certmanager/v1alpha1"
 	cmlisters "github.com/jetstack-experimental/cert-manager/pkg/client/listers/certmanager/v1alpha1"
 	controllerpkg "github.com/jetstack-experimental/cert-manager/pkg/controller"
 	"github.com/jetstack-experimental/cert-manager/pkg/issuer"
@@ -186,25 +182,8 @@ const (
 func init() {
 	controllerpkg.Register(ControllerName, func(ctx *controllerpkg.Context) controllerpkg.Interface {
 		return New(
-			ctx.SharedInformerFactory.InformerFor(
-				corev1.NamespaceAll,
-				metav1.GroupVersionKind{Group: certmanager.GroupName, Version: "v1alpha1", Kind: "ClusterIssuer"},
-				cminformers.NewClusterIssuerInformer(
-					ctx.CMClient,
-					time.Second*30,
-					cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
-				),
-			),
-			ctx.SharedInformerFactory.InformerFor(
-				ctx.ClusterResourceNamespace,
-				metav1.GroupVersionKind{Version: "v1", Kind: "Secret"},
-				coreinformers.NewSecretInformer(
-					ctx.Client,
-					ctx.ClusterResourceNamespace,
-					time.Second*30,
-					cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
-				),
-			),
+			ctx.SharedInformerFactory.Certmanager().V1alpha1().ClusterIssuers().Informer(),
+			ctx.KubeSharedInformerFactory.Core().V1().Secrets().Informer(),
 			ctx.Client,
 			ctx.CMClient,
 			ctx.IssuerFactory,

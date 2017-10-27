@@ -42,3 +42,12 @@ ${BINDIR}/informer-gen "$@" \
           --listers-package "github.com/jetstack-experimental/cert-manager/pkg/client/listers" \
           --output-package "github.com/jetstack-experimental/cert-manager/pkg/client/informers" \
           --single-directory
+# generate third_party corev1 informers
+${BINDIR}/informer-gen "$@" \
+          --go-header-file "${GOPATH}/src/github.com/kubernetes/repo-infra/verify/boilerplate/boilerplate.go.txt" \
+          --input-dirs "k8s.io/api/core/v1" \
+          --input-dirs "k8s.io/api/extensions/v1beta1" \
+          --versioned-clientset-package "k8s.io/client-go/kubernetes" \
+          --listers-package "k8s.io/client-go/listers" \
+          --output-package "github.com/jetstack-experimental/cert-manager/third_party/informers" \
+          --single-directory

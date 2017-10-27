@@ -6,7 +6,9 @@ import (
 
 	clientset "github.com/jetstack-experimental/cert-manager/pkg/client/clientset"
 	"github.com/jetstack-experimental/cert-manager/pkg/issuer"
-	"github.com/jetstack-experimental/cert-manager/pkg/util/kube"
+	//"github.com/jetstack-experimental/cert-manager/pkg/util/kube"
+	"github.com/jetstack-experimental/cert-manager/pkg/client/informers"
+	kubeinformers "github.com/jetstack-experimental/cert-manager/third_party/informers"
 )
 
 // Context contains various types that are used by controller implementations.
@@ -21,9 +23,10 @@ type Context struct {
 	// Recorder to record events to
 	Recorder record.EventRecorder
 
+	KubeSharedInformerFactory kubeinformers.SharedInformerFactory
 	// SharedInformerFactory can be used to obtain shared SharedIndexInformer
 	// instances
-	SharedInformerFactory kube.SharedInformerFactory
+	SharedInformerFactory informers.SharedInformerFactory
 	// IssuerFactory is a factory that can be used to obtain issuer.Interface
 	// instances
 	IssuerFactory issuer.Factory
