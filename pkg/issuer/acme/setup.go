@@ -6,16 +6,16 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/crypto/acme"
+	"github.com/golang/glog"
 	"k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/golang/glog"
 	"github.com/jetstack-experimental/cert-manager/pkg/apis/certmanager/v1alpha1"
 	"github.com/jetstack-experimental/cert-manager/pkg/util/errors"
 	"github.com/jetstack-experimental/cert-manager/pkg/util/kube"
 	"github.com/jetstack-experimental/cert-manager/pkg/util/pki"
+	"github.com/jetstack-experimental/cert-manager/third_party/acme"
 )
 
 const (

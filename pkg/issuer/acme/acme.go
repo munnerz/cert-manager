@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"golang.org/x/crypto/acme"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	coreinformers "k8s.io/client-go/informers/core/v1"
@@ -21,6 +20,7 @@ import (
 	"github.com/jetstack-experimental/cert-manager/pkg/issuer/acme/dns"
 	"github.com/jetstack-experimental/cert-manager/pkg/issuer/acme/http"
 	"github.com/jetstack-experimental/cert-manager/pkg/util/kube"
+	"github.com/jetstack-experimental/cert-manager/third_party/acme"
 )
 
 // Acme is an issuer for an ACME server. It can be used to register and obtain
