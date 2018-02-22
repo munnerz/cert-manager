@@ -287,6 +287,22 @@ func NewCertManagerACMECertificate(name, secretName, issuerName string, issuerKi
 	}
 }
 
+func NewCertManagerVaultCertificate(name, secretName, issuerName string, issuerKind string) *v1alpha1.Certificate {
+	return &v1alpha1.Certificate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: v1alpha1.CertificateSpec{
+			CommonName: "test.domain.com",
+			SecretName: secretName,
+			IssuerRef: v1alpha1.ObjectReference{
+				Name: issuerName,
+				Kind: issuerKind,
+			},
+		},
+	}
+}
+
 func NewIngress(name, secretName string, annotations map[string]string, dnsNames ...string) *extv1beta1.Ingress {
 	return &extv1beta1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
@@ -357,6 +373,56 @@ func NewCertManagerCAIssuer(name, secretName string, duration time.Duration) *v1
 				Duration: duration,
 				CA: &v1alpha1.CAIssuer{
 					SecretName: secretName,
+				},
+			},
+		},
+	}
+}
+
+func NewCertManagerVaultIssuerToken(name, vaultURL, vaultPath, vaultSecretToken string, duration, renewBefore time.Duration) *v1alpha1.Issuer {
+	return &v1alpha1.Issuer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: v1alpha1.IssuerSpec{
+			IssuerConfig: v1alpha1.IssuerConfig{
+				Duration:    duration,
+				RenewBefore: renewBefore,
+				Vault: &v1alpha1.VaultIssuer{
+					Server: vaultURL,
+					Path:   vaultPath,
+					Auth: v1alpha1.VaultAuth{
+						TokenSecretRef: v1alpha1.SecretKeySelector{
+							LocalObjectReference: v1alpha1.LocalObjectReference{
+								Name: vaultSecretToken,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func NewCertManagerVaultIssuerAppRole(name, vaultURL, vaultPath, vaultSecretAppRole string, duration, renewBefore time.Duration) *v1alpha1.Issuer {
+	return &v1alpha1.Issuer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: v1alpha1.IssuerSpec{
+			IssuerConfig: v1alpha1.IssuerConfig{
+				Duration:    duration,
+				RenewBefore: renewBefore,
+				Vault: &v1alpha1.VaultIssuer{
+					Server: vaultURL,
+					Path:   vaultPath,
+					Auth: v1alpha1.VaultAuth{
+						AppRoleSecretRef: v1alpha1.SecretKeySelector{
+							LocalObjectReference: v1alpha1.LocalObjectReference{
+								Name: vaultSecretAppRole,
+							},
+						},
+					},
 				},
 			},
 		},

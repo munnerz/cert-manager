@@ -88,8 +88,29 @@ type IssuerConfig struct {
 	// Certificate renew before expiration duration
 	RenewBefore time.Duration `json:"renewBefore,omitempty"`
 
-	ACME *ACMEIssuer `json:"acme,omitempty"`
-	CA   *CAIssuer   `json:"ca,omitempty"`
+	ACME  *ACMEIssuer  `json:"acme,omitempty"`
+	CA    *CAIssuer    `json:"ca,omitempty"`
+	Vault *VaultIssuer `json:"vault,omitempty""`
+}
+
+type VaultIssuer struct {
+	// Vault authentication
+	Auth VaultAuth `json:"auth"`
+	// Server is the vault connection address
+	Server string `json:"server"`
+	// Vault URL path to the certificate role
+	Path string `json:"path"`
+}
+
+// Vault authentication  can be configured:
+// - With a secret containing a token. Cert-manager is using this token as-is.
+// - With a secret containing a AppRole. This AppRole is used to authenticate to
+//   Vault and retrieve a token.
+type VaultAuth struct {
+	// This Secret contains the Vault token key
+	TokenSecretRef SecretKeySelector `json:"tokenSecretRef"`
+	// This Secret contains a AppRole and Secret
+	AppRoleSecretRef SecretKeySelector `json:"appRoleSecretRef"`
 }
 
 type CAIssuer struct {

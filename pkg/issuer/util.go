@@ -13,8 +13,12 @@ func ValidateDuration(issuer v1alpha1.GenericIssuer) error {
 	}
 
 	if issuer.GetSpec().Duration != 0 && issuer.GetSpec().RenewBefore != 0 &&
-		issuer.GetSpec().Duration < issuer.GetSpec().RenewBefore+MinimumCertificateValidityDuration {
-		return fmt.Errorf("certificate duration must be greater than renewBefore (%s)", issuer.GetSpec().RenewBefore)
+		issuer.GetSpec().Duration < issuer.GetSpec().RenewBefore {
+		return fmt.Errorf("certificate duration (%s) must be greater than renewBefore (%s)", issuer.GetSpec().Duration, issuer.GetSpec().RenewBefore)
+	}
+
+	if issuer.GetSpec().RenewBefore != 0 && issuer.GetSpec().RenewBefore < MinimumCertificateRenewalWindowDuration {
+		return fmt.Errorf("certificate renewBefore (%s) value must be greater than %s", issuer.GetSpec().RenewBefore, MinimumCertificateRenewalWindowDuration)
 	}
 
 	return nil
