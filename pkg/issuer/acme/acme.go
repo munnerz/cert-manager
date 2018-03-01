@@ -80,7 +80,7 @@ type solver interface {
 }
 
 // New returns a new ACME issuer interface for the given issuer.
-func New(issuer v1alpha1.GenericIssuer,
+func New(issuerObj v1alpha1.GenericIssuer,
 	client kubernetes.Interface,
 	cmClient clientset.Interface,
 	recorder record.EventRecorder,
@@ -91,14 +91,18 @@ func New(issuer v1alpha1.GenericIssuer,
 	servicesLister corelisters.ServiceLister,
 	ingressLister extlisters.IngressLister,
 	ambientCreds bool) (issuer.Interface, error) {
-	if issuer.GetSpec().ACME == nil {
+	if issuerObj.GetSpec().ACME == nil {
 		return nil, fmt.Errorf("acme config may not be empty")
 	}
 
-	if issuer.GetSpec().ACME.Server == "" ||
-		issuer.GetSpec().ACME.PrivateKey.Name == "" ||
-		issuer.GetSpec().ACME.Email == "" {
+	if issuerObj.GetSpec().ACME.Server == "" ||
+		issuerObj.GetSpec().ACME.PrivateKey.Name == "" ||
+		issuerObj.GetSpec().ACME.Email == "" {
 		return nil, fmt.Errorf("acme server, private key and email are required fields")
+	}
+
+	if err := issuer.ValidateDuration(issuerObj); err != nil {
+		return nil, fmt.Errorf("Vault %s", err.Error())
 	}
 
 	if resourceNamespace == "" {
@@ -106,7 +110,7 @@ func New(issuer v1alpha1.GenericIssuer,
 	}
 
 	a := &Acme{
-		issuer:         issuer,
+		issuer:         issuerObj,
 		client:         client,
 		cmClient:       cmClient,
 		recorder:       recorder,
@@ -115,8 +119,8 @@ func New(issuer v1alpha1.GenericIssuer,
 		servicesLister: servicesLister,
 		ingressLister:  ingressLister,
 
-		dnsSolver:                dns.NewSolver(issuer, client, secretsLister, resourceNamespace, ambientCreds),
-		httpSolver:               http.NewSolver(issuer, client, podsLister, servicesLister, ingressLister, acmeHTTP01SolverImage),
+		dnsSolver:                dns.NewSolver(issuerObj, client, secretsLister, resourceNamespace, ambientCreds),
+		httpSolver:               http.NewSolver(issuerObj, client, podsLister, servicesLister, ingressLister, acmeHTTP01SolverImage),
 		issuerResourcesNamespace: resourceNamespace,
 	}
 	a.acmeClient = a.acmeClientImpl
@@ -184,6 +188,20 @@ func (a *Acme) createOrder(ctx context.Context, cl client.Interface, crt *v1alph
 	if err != nil {
 		return nil, err
 	}
+
+	// The ACME protocol supports custom validity dates in the certificate order.
+	// pebble and boulder do not support them at this time.
+	certDuration := certificateDuration
+	if a.issuer.GetSpec().Duration != 0 {
+		certDuration = a.issuer.GetSpec().Duration
+	}
+
+	if certDuration != 0 {
+		now := time.Now().UTC()
+		order.NotBefore = now
+		order.NotAfter = now.Add(certDuration)
+	}
+
 	order, err = cl.CreateOrder(ctx, order)
 	if err != nil {
 		a.recorder.Eventf(crt, corev1.EventTypeWarning, "ErrCreateOrder", "Error creating order: %v", err)

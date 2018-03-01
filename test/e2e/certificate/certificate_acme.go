@@ -57,7 +57,7 @@ var _ = framework.CertManagerDescribe("ACME Certificate (HTTP01)", func() {
 		_, err = f.KubeClientSet.CoreV1().Secrets(f.Namespace.Name).Get(certificateSecretName, metav1.GetOptions{})
 		Expect(err).To(MatchError(apierrors.NewNotFound(corev1.Resource("secrets"), certificateSecretName)))
 		By("Creating an Issuer")
-		_, err = f.CertManagerClientSet.CertmanagerV1alpha1().Issuers(f.Namespace.Name).Create(util.NewCertManagerACMEIssuer(issuerName, framework.TestContext.ACMEURL, testingACMEEmail, testingACMEPrivateKey))
+		_, err = f.CertManagerClientSet.CertmanagerV1alpha1().Issuers(f.Namespace.Name).Create(util.NewCertManagerACMEIssuer(issuerName, framework.TestContext.ACMEURL, testingACMEEmail, testingACMEPrivateKey, 0, 0))
 		Expect(err).NotTo(HaveOccurred())
 		By("Waiting for Issuer to become Ready")
 		err = util.WaitForIssuerCondition(f.CertManagerClientSet.CertmanagerV1alpha1().Issuers(f.Namespace.Name),
@@ -130,4 +130,63 @@ var _ = framework.CertManagerDescribe("ACME Certificate (HTTP01)", func() {
 		_, err = f.KubeClientSet.CoreV1().Secrets(f.Namespace.Name).Get(certificateSecretName, metav1.GetOptions{})
 		Expect(err).To(MatchError(apierrors.NewNotFound(corev1.Resource("secrets"), certificateSecretName)))
 	})
+
+	now := time.Now()
+	pebble5years := now.AddDate(5, 0, 0).Sub(now)
+	cases := []struct {
+		inputDuration    time.Duration
+		inputRenewBefore time.Duration
+		expectedDuration time.Duration
+		label            string
+		event            string
+	}{
+		{
+			inputDuration:    time.Hour * 24 * 365 * 6,
+			inputRenewBefore: 0,
+			expectedDuration: pebble5years,
+			label:            "should obtain a valid certificate with a warning event when the requested duration is greater than the configured ACME server duration",
+			event:            "WarnCertificateDuration",
+		},
+		{
+			inputDuration:    time.Hour * 24 * 365 * 7,
+			inputRenewBefore: time.Hour * 24 * 365 * 6,
+			expectedDuration: pebble5years,
+			label:            "should obtain a valid certificate with a warning event when renewBefore is bigger than the ACME received certificate duration",
+			event:            "WarnScheduleModified",
+		},
+	}
+
+	for _, v := range cases {
+		v := v
+		It(v.label, func() {
+			issuerName := "test-acme-issuer-duration"
+			certificateName := "test-acme-certificate-duration"
+			certificateSecretName := "test-acme-certificate-duration"
+
+			By("Creating an Issuer")
+			_, err := f.CertManagerClientSet.CertmanagerV1alpha1().Issuers(f.Namespace.Name).Create(util.NewCertManagerACMEIssuer(issuerName, framework.TestContext.ACMEURL, testingACMEEmail, testingACMEPrivateKey, v.inputDuration, v.inputRenewBefore))
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Waiting for Issuer to become Ready")
+			err = util.WaitForIssuerCondition(f.CertManagerClientSet.CertmanagerV1alpha1().Issuers(f.Namespace.Name),
+				issuerName,
+				v1alpha1.IssuerCondition{
+					Type:   v1alpha1.IssuerConditionReady,
+					Status: v1alpha1.ConditionTrue,
+				})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Creating a Certificate")
+			cert, err := f.CertManagerClientSet.CertmanagerV1alpha1().Certificates(f.Namespace.Name).Create(util.NewCertManagerACMECertificate(certificateName, certificateSecretName, issuerName, v1alpha1.IssuerKind, acmeIngressClass, util.ACMECertificateDomain, fmt.Sprintf("%s.%s", cmutil.RandStringRunes(5), util.ACMECertificateDomain)))
+			Expect(err).NotTo(HaveOccurred())
+
+			f.WaitCertificateIssuedValid(cert)
+			f.CertificateDurationValid(cert, v.expectedDuration)
+
+			f.WaitForCertificateEvent(cert, v.event)
+
+			By("Cleaning up")
+			f.CertManagerClientSet.CertmanagerV1alpha1().Issuers(f.Namespace.Name).Delete(issuerName, nil)
+		})
+	}
 })

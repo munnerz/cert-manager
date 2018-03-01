@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -81,6 +83,11 @@ type IssuerSpec struct {
 }
 
 type IssuerConfig struct {
+	// Certificate default Duration
+	Duration time.Duration `json:"duration,omitempty"`
+	// Certificate renew before expiration duration
+	RenewBefore time.Duration `json:"renewBefore,omitempty"`
+
 	ACME *ACMEIssuer `json:"acme,omitempty"`
 	CA   *CAIssuer   `json:"ca,omitempty"`
 }

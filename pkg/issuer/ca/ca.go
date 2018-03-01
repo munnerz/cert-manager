@@ -1,6 +1,8 @@
 package ca
 
 import (
+	"fmt"
+
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -22,14 +24,19 @@ type CA struct {
 	secretsLister            corelisters.SecretLister
 }
 
-func NewCA(issuer v1alpha1.GenericIssuer,
+func NewCA(issuerObj v1alpha1.GenericIssuer,
 	cl kubernetes.Interface,
 	cmclient clientset.Interface,
 	recorder record.EventRecorder,
 	issuerResourcesNamespace string,
 	secretsLister corelisters.SecretLister) (issuer.Interface, error) {
+
+	if err := issuer.ValidateDuration(issuerObj); err != nil {
+		return nil, fmt.Errorf("CA %s", err.Error())
+	}
+
 	return &CA{
-		issuer:                   issuer,
+		issuer:                   issuerObj,
 		cl:                       cl,
 		cmclient:                 cmclient,
 		recorder:                 recorder,

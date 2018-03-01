@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"time"
 
 	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"
@@ -21,6 +22,9 @@ import (
 
 const (
 	errorIssueError = "IssueError"
+
+	// default certificateDuration of zero, we let ACME decide
+	certificateDuration = time.Duration(0)
 
 	successCertObtained = "CertObtained"
 )
@@ -71,6 +75,7 @@ func (a *Acme) obtainCertificate(ctx context.Context, crt *v1alpha1.Certificate)
 
 	// obtain a certificate from the acme server
 	certSlice, err := cl.FinalizeOrder(ctx, order.FinalizeURL, csr)
+
 	if err != nil {
 		// this handles an edge case where a certificate ends out with an order
 		// that is in an invalid state.

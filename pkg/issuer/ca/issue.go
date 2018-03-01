@@ -32,7 +32,7 @@ const (
 )
 
 const (
-	// certificateDuration of 1 year
+	// certificateDuration of 1 year if issuer.spec.duration is not set
 	certificateDuration = time.Hour * 24 * 365
 	defaultOrganization = "cert-manager"
 )
@@ -80,7 +80,11 @@ func (c *CA) obtainCertificate(crt *v1alpha1.Certificate, signeeKey interface{})
 		return nil, fmt.Errorf("error getting issuer private key: %s", err.Error())
 	}
 
-	crtPem, _, err := signCertificate(crt, signerCert, signeeKey, signerKey)
+	certDuration := certificateDuration
+	if c.issuer.GetSpec().Duration != 0 {
+		certDuration = c.issuer.GetSpec().Duration
+	}
+	crtPem, _, err := signCertificate(crt, signerCert, signeeKey, signerKey, certDuration)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +92,7 @@ func (c *CA) obtainCertificate(crt *v1alpha1.Certificate, signeeKey interface{})
 	return crtPem, nil
 }
 
-func createCertificateTemplate(publicKey interface{}, commonName string, altNames ...string) (*x509.Certificate, error) {
+func createCertificateTemplate(publicKey interface{}, commonName string, duration time.Duration, altNames ...string) (*x509.Certificate, error) {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
@@ -108,7 +112,7 @@ func createCertificateTemplate(publicKey interface{}, commonName string, altName
 			CommonName:   commonName,
 		},
 		NotBefore: time.Now(),
-		NotAfter:  time.Now().Add(certificateDuration),
+		NotAfter:  time.Now().Add(duration),
 		// see http://golang.org/pkg/crypto/x509/#KeyUsage
 		KeyUsage: x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		DNSNames: altNames,
@@ -120,11 +124,11 @@ func createCertificateTemplate(publicKey interface{}, commonName string, altName
 // *v1alpha1.Certificate crt.
 // publicKey is the public key of the signee, and signerKey is the private
 // key of the signer.
-func signCertificate(crt *v1alpha1.Certificate, issuerCert *x509.Certificate, publicKey interface{}, signerKey interface{}) ([]byte, *x509.Certificate, error) {
+func signCertificate(crt *v1alpha1.Certificate, issuerCert *x509.Certificate, publicKey interface{}, signerKey interface{}, duration time.Duration) ([]byte, *x509.Certificate, error) {
 	cn := pki.CommonNameForCertificate(crt)
 	dnsNames := pki.DNSNamesForCertificate(crt)
 
-	template, err := createCertificateTemplate(publicKey, cn, dnsNames...)
+	template, err := createCertificateTemplate(publicKey, cn, duration, dnsNames...)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error creating x509 certificate template: %s", err.Error())
 	}

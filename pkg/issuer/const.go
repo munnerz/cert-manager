@@ -2,11 +2,19 @@ package issuer
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
 )
 
 const (
+	// Default to 30 days if Issuer.spec.renewBefore is not set
+	RenewCertificateBeforeDuration = time.Hour * 24 * 30
+	// Minimum duration before renewal.
+	MinimumCertificateValidityDuration = time.Minute * 5
+	// Minium certificate duration
+	MinimumCertificateDuration = RenewCertificateBeforeDuration + MinimumCertificateValidityDuration
+
 	// IssuerACME is the name of the ACME issuer
 	IssuerACME string = "acme"
 	// IssuerCA is the name of the simple issuer
