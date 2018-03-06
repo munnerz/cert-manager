@@ -52,7 +52,7 @@ func WaitForIssuerStatusFunc(client clientset.IssuerInterface, name string, fn f
 // WaitForIssuerCondition waits for the status of the named issuer to contain
 // a condition whose type and status matches the supplied one.
 func WaitForIssuerCondition(client clientset.IssuerInterface, name string, condition v1alpha1.IssuerCondition) error {
-	return wait.PollImmediate(500*time.Millisecond, wait.ForeverTestTimeout,
+	pollErr := wait.PollImmediate(500*time.Millisecond, wait.ForeverTestTimeout,
 		func() (bool, error) {
 			glog.V(5).Infof("Waiting for issuer %v condition %#v", name, condition)
 			issuer, err := client.Get(name, metav1.GetOptions{})
@@ -63,12 +63,34 @@ func WaitForIssuerCondition(client clientset.IssuerInterface, name string, condi
 			return issuer.HasCondition(condition), nil
 		},
 	)
+	return wrapErrorWithIssuerStatusCondition(client, pollErr, name, condition.Type)
+}
+
+// try to retrieve last condition to help diagnose tests.
+func wrapErrorWithIssuerStatusCondition(client clientset.IssuerInterface, pollErr error, name string, conditionType v1alpha1.IssuerConditionType) error {
+	if pollErr == nil {
+		return nil
+	}
+
+	issuer, err := client.Get(name, metav1.GetOptions{})
+	if err != nil {
+		return pollErr
+	}
+
+	for _, cond := range issuer.GetStatus().Conditions {
+		if cond.Type == conditionType {
+			return fmt.Errorf("%s: Last Status: '%s' Reason: '%s', Message: '%s'", pollErr.Error(), cond.Status, cond.Reason, cond.Message)
+		}
+
+	}
+
+	return pollErr
 }
 
 // WaitForClusterIssuerCondition waits for the status of the named issuer to contain
 // a condition whose type and status matches the supplied one.
 func WaitForClusterIssuerCondition(client clientset.ClusterIssuerInterface, name string, condition v1alpha1.IssuerCondition) error {
-	return wait.PollImmediate(500*time.Millisecond, wait.ForeverTestTimeout,
+	pollErr := wait.PollImmediate(500*time.Millisecond, wait.ForeverTestTimeout,
 		func() (bool, error) {
 			glog.V(5).Infof("Waiting for clusterissuer %v condition %#v", name, condition)
 			issuer, err := client.Get(name, metav1.GetOptions{})
@@ -79,12 +101,34 @@ func WaitForClusterIssuerCondition(client clientset.ClusterIssuerInterface, name
 			return issuer.HasCondition(condition), nil
 		},
 	)
+	return wrapErrorWithClusterIssuerStatusCondition(client, pollErr, name, condition.Type)
+}
+
+// try to retrieve last condition to help diagnose tests.
+func wrapErrorWithClusterIssuerStatusCondition(client clientset.ClusterIssuerInterface, pollErr error, name string, conditionType v1alpha1.IssuerConditionType) error {
+	if pollErr == nil {
+		return nil
+	}
+
+	issuer, err := client.Get(name, metav1.GetOptions{})
+	if err != nil {
+		return pollErr
+	}
+
+	for _, cond := range issuer.GetStatus().Conditions {
+		if cond.Type == conditionType {
+			return fmt.Errorf("%s: Last Status: '%s' Reason: '%s', Message: '%s'", pollErr.Error(), cond.Status, cond.Reason, cond.Message)
+		}
+
+	}
+
+	return pollErr
 }
 
 // WaitForCertificateCondition waits for the status of the named Certificate to contain
 // a condition whose type and status matches the supplied one.
 func WaitForCertificateCondition(client clientset.CertificateInterface, name string, condition v1alpha1.CertificateCondition, timeout time.Duration) error {
-	return wait.PollImmediate(500*time.Millisecond, timeout,
+	pollErr := wait.PollImmediate(500*time.Millisecond, timeout,
 		func() (bool, error) {
 			glog.V(5).Infof("Waiting for Certificate %v condition %#v", name, condition)
 			certificate, err := client.Get(name, metav1.GetOptions{})
@@ -95,6 +139,28 @@ func WaitForCertificateCondition(client clientset.CertificateInterface, name str
 			return certificate.HasCondition(condition), nil
 		},
 	)
+	return wrapErrorWithCertificateStatusCondition(client, pollErr, name, condition.Type)
+}
+
+// try to retrieve last condition to help diagnose tests.
+func wrapErrorWithCertificateStatusCondition(client clientset.CertificateInterface, pollErr error, name string, conditionType v1alpha1.CertificateConditionType) error {
+	if pollErr == nil {
+		return nil
+	}
+
+	certificate, err := client.Get(name, metav1.GetOptions{})
+	if err != nil {
+		return pollErr
+	}
+
+	for _, cond := range certificate.Status.Conditions {
+		if cond.Type == conditionType {
+			return fmt.Errorf("%s: Last Status: '%s' Reason: '%s', Message: '%s'", pollErr.Error(), cond.Status, cond.Reason, cond.Message)
+		}
+
+	}
+
+	return pollErr
 }
 
 // WaitForCertificateToExist waits for the named certificate to exist
