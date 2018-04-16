@@ -33,3 +33,34 @@ Create the name of the service account to use
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Create the name of the service account to use for webhooks
+*/}}
+{{- define "cert-manager.webhook.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+    {{ default (printf "%s-webhook" (include "cert-manager.fullname" .)) .Values.webhook.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.webhook.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{- define "cert-manager.webhook.serviceName" -}}
+{{ printf "%s-webhook" (include "cert-manager.fullname" .) }}
+{{- end -}}
+
+{{- define "cert-manager.webhook.selfSignedIssuer" -}}
+{{ printf "%s-selfsign" (include "cert-manager.fullname" .) }}
+{{- end -}}
+
+{{- define "cert-manager.webhook.issuer" -}}
+{{ printf "%s-webhook" (include "cert-manager.fullname" .) }}
+{{- end -}}
+
+{{- define "cert-manager.webhook.rootCACertificate" -}}
+{{ printf "%s-webhook-ca" (include "cert-manager.fullname" .) }}
+{{- end -}}
+
+{{- define "cert-manager.webhook.certificate" -}}
+{{ printf "%s-webhook-tls" (include "cert-manager.fullname" .) }}
+{{- end -}}

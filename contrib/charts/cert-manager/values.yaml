@@ -65,6 +65,35 @@ ingressShim: {}
   # defaultACMEChallengeType: ""
   # defaultACMEDNS01ChallengeProvider: ""
 
+webhook:
+  enabled: true
+
+  caSecret: "ca-key-pair"
+
+  podAnnotations: {}
+
+  # Optional additional arguments for webhook
+  extraArgs: []
+
+  resources: {}
+    # requests:
+    #   cpu: 10m
+    #   memory: 32Mi
+
+  image:
+    repository: quay.io/jetstack/cert-manager-webhook
+
+    # Defaults to image.tag.
+    # You should only change this if you know what you are doing!
+    # tag: v0.2.3
+
+    pullPolicy: IfNotPresent
+
+  serviceAccount:
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name:
+
 # This is used by the static manifest generator in order to create a static
 # namespace manifest for the namespace that cert-manager is being installed
 # within. It should **not** be used if you are using Helm for deployment.

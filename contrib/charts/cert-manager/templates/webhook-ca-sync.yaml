@@ -1,0 +1,98 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ template "cert-manager.fullname" . }}-ca-sync
+spec:
+  schedule: "* */1 * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: ca-helper
+        spec:
+          serviceAccountName: {{ template "cert-manager.fullname" . }}-ca-sync
+          restartPolicy: OnFailure
+          containers:
+          - name: ca-helper
+            image: quay.io/munnerz/apiextensions-ca-helper:canary
+            imagePullPolicy: Always
+            args:
+            - -config=/config/config
+            volumeMounts:
+            - name: config
+              mountPath: /config
+          volumes:
+          - name: config
+            configMap:
+              name: {{ template "cert-manager.fullname" . }}-ca-sync
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ template "cert-manager.fullname" . }}-ca-sync
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ template "cert-manager.fullname" . }}-ca-sync
+  labels:
+    app: ca-helper
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+    resourceNames:
+    - {{ .Values.webhook.caSecret }}
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations", "mutatingwebhookconfigurations"]
+    verbs: ["get", "update"]
+    resourceNames:
+    - {{ template "cert-manager.fullname" . }}-validation
+  - apiGroups: ["apiregistration.k8s.io"]
+    resources: ["apiservices"]
+    verbs: ["get", "update"]
+    resourceNames:
+    - v1beta1.admission.certmanager.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ template "cert-manager.fullname" . }}-ca-sync
+  labels:
+    app: ca-helper
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "cert-manager.fullname" . }}-ca-sync
+subjects:
+  - name: {{ template "cert-manager.fullname" . }}-ca-sync
+    namespace: {{ .Release.Namespace }}
+    kind: ServiceAccount
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "cert-manager.fullname" . }}-ca-sync
+data:
+  config: |-
+    {
+        "apiServices": [
+            {
+                "name": "v1beta1.admission.certmanager.k8s.io",
+                "secret": {
+                    "name": "{{ template "cert-manager.webhook.rootCACertificate" . }}",
+                    "namespace": "{{ .Release.Namespace }}",
+                    "key": "tls.crt"
+                }
+            }
+        ],
+        "validatingWebhookConfigurations": [
+            {
+                "name": "{{ template "cert-manager.fullname" . }}-validation",
+                "file": {
+                    "path": "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+                }
+            }
+        ]
+    }

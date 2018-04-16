@@ -41,4 +41,6 @@ subjects:
   - name: {{ template "cert-manager.serviceAccountName" . }}
     namespace: {{ .Release.Namespace | quote }}
     kind: ServiceAccount
+---
+
 {{- end -}}

@@ -32,6 +32,10 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+          - name: localmanifests
+            mountPath: /etc/cert-manager/manifests
+            readOnly: true
           args:
         {{- if .Values.clusterResourceNamespace }}
           - --cluster-resource-namespace={{ .Values.clusterResourceNamespace }}
@@ -42,9 +46,6 @@ spec:
           - --leader-election-namespace={{ .Values.leaderElection.namespace }}
         {{- else }}
           - --leader-election-namespace=$(POD_NAMESPACE)
-        {{- end }}
-        {{- if .Values.extraArgs }}
-{{ toYaml .Values.extraArgs | indent 10 }}
         {{- end }}
           {{- with .Values.ingressShim }}
           {{- if .defaultIssuerName }}
@@ -60,6 +61,9 @@ spec:
           - --default-acme-issuer-dns01-provider-name={{ .defaultACMEDNS01ChallengeProvider }}
           {{- end }}
           {{- end }}
+        {{- if .Values.extraArgs }}
+{{ toYaml .Values.extraArgs | indent 10 }}
+        {{- end }}
           env:
           - name: POD_NAMESPACE
             valueFrom:
@@ -67,6 +71,10 @@ spec:
                 fieldPath: metadata.namespace
           resources:
 {{ toYaml .Values.resources | indent 12 }}
+      volumes:
+      - name: localmanifests
+        configMap:
+          name: "{{ template "cert-manager.fullname" . }}"
     {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}
