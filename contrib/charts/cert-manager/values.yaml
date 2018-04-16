@@ -68,6 +68,8 @@ ingressShim: {}
 webhook:
   enabled: true
 
+  replicaCount: 1
+
   caSecret: "ca-key-pair"
 
   podAnnotations: {}

@@ -7,6 +7,85 @@ metadata:
   name: "cert-manager"
 
 ---
+# Source: cert-manager/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cert-manager
+  namespace: "cert-manager"
+  labels:
+    app: cert-manager
+    chart: cert-manager-v0.3.3
+    release: cert-manager
+    heritage: Tiller
+data:
+  # Create a selfsigned Issuer, in order to create a root CA certificate for
+  # signing webhook serving certificates
+  issuer-selfsign.yaml: |-
+    apiVersion: certmanager.k8s.io/v1alpha1
+    kind: Issuer
+    metadata:
+      name: "cert-manager-selfsign"
+      namespace: "cert-manager"
+    spec:
+      selfsigned: {}
+    status:
+      # Manually set a ready: true condition, as during bootstrap the Issuer controller
+      # will not be able to mark the Issuer as ready, blocking the Certificate being fulfilled
+      conditions:
+      - type: Ready
+        status: "True"
+        reason: "Manually set ready status"
+
+  # Generate a CA Certificate used to sign certificates for the webhook
+  cert-webhook-ca.yaml: |-
+    apiVersion: certmanager.k8s.io/v1alpha1
+    kind: Certificate
+    metadata:
+      name: "cert-manager-webhook-ca"
+      namespace: "cert-manager"
+    spec:
+      secretName: "cert-manager-webhook-ca"
+      issuerRef:
+        name: "cert-manager-selfsign"
+      commonName: "ca.webhook.cert-manager"
+      isCA: true
+
+  # Create an Issuer that uses the above generated CA certificate to issue certs
+  issuer-webhook-ca.yaml: |-
+    apiVersion: certmanager.k8s.io/v1alpha1
+    kind: Issuer
+    metadata:
+      name: "cert-manager-webhook"
+      namespace: "cert-manager"
+    spec:
+      ca:
+        secretName: "cert-manager-webhook-ca"
+    status:
+      # Manually set a ready: true condition, as during bootstrap the Issuer controller
+      # will not be able to mark the Issuer as ready, blocking the Certificate being fulfilled
+      conditions:
+      - type: Ready
+        status: "True"
+        reason: "Manually set ready status"
+
+  # Finally, generate a serving certificate for the webhook to use
+  cert-webhook-tls.yaml: |-
+    apiVersion: certmanager.k8s.io/v1alpha1
+    kind: Certificate
+    metadata:
+      name: "cert-manager-webhook-tls"
+      namespace: "cert-manager"
+    spec:
+      secretName: "cert-manager-webhook-tls"
+      issuerRef:
+        name: "cert-manager-webhook"
+      dnsNames:
+      - "cert-manager-webhook"
+      - "cert-manager-webhook.cert-manager"
+      - "cert-manager-webhook.cert-manager.svc"
+
+---
 # Source: cert-manager/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -192,7 +271,7 @@ rules:
 apiVersion: v1
 kind: Service
 metadata:
-  name: cert-manager-webhook
+  name: "cert-manager-webhook"
   namespace: "cert-manager"
   labels:
     app: cert-manager
@@ -239,14 +318,13 @@ spec:
         - name: cert-manager
           image: "quay.io/jetstack/cert-manager-controller:v0.3.0"
           imagePullPolicy: IfNotPresent
+          volumeMounts:
+          - name: localmanifests
+            mountPath: /etc/cert-manager/manifests
+            readOnly: true
           args:
           - --cluster-resource-namespace=$(POD_NAMESPACE)
           - --leader-election-namespace=$(POD_NAMESPACE)
-          - --webhook-namespace=$(POD_NAMESPACE)
-          - --webhook-service-name=cert-manager-webhook
-          - --webhook-issuer-name=cert-manager-webhook
-          - --webhook-ca-secret=ca-key-pair
-          - --webhook-secret-name=cert-manager-webhook
           env:
           - name: POD_NAMESPACE
             valueFrom:
@@ -257,6 +335,10 @@ spec:
               cpu: 10m
               memory: 32Mi
             
+      volumes:
+      - name: localmanifests
+        configMap:
+          name: "cert-manager"
 
 ---
 # Source: cert-manager/templates/webhook-deployment.yaml
@@ -271,7 +353,7 @@ metadata:
     release: cert-manager
     heritage: Tiller
 spec:
-  replicas: 
+  replicas: 1
   selector:
     matchLabels:
       app: cert-manager-webhook
@@ -307,7 +389,7 @@ spec:
       volumes:
       - name: certs
         secret:
-          secretName: cert-manager-webhook
+          secretName: "cert-manager-webhook-tls"
 
 ---
 # Source: cert-manager/templates/webhook-ca-sync.yaml
@@ -394,7 +476,7 @@ data:
             {
                 "name": "v1beta1.admission.certmanager.k8s.io",
                 "secret": {
-                    "name": "ca-key-pair",
+                    "name": "cert-manager-webhook-ca",
                     "namespace": "cert-manager",
                     "key": "tls.crt"
                 }
@@ -420,7 +502,7 @@ spec:
   groupPriorityMinimum: 1000
   versionPriority: 15
   service:
-    name: cert-manager-webhook
+    name: "cert-manager-webhook"
     namespace: "cert-manager"
   version: v1beta1
 

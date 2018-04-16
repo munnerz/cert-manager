@@ -42,5 +42,5 @@ subjects:
     namespace: {{ .Release.Namespace | quote }}
     kind: ServiceAccount
 ---
-
 {{- end -}}
+
