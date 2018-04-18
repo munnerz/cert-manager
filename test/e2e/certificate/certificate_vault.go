@@ -25,6 +25,8 @@ var _ = framework.CertManagerDescribe("Vault Certificate (AppRole)", func() {
 	vaultSecretAppRoleName := "vault-role"
 	vaultPath := fmt.Sprintf("%s/sign/%s", intermediateMount, role)
 	var vaultInit *util.VaultInitializer
+	var roleId string
+	var secretId string
 
 	BeforeEach(func() {
 		By("Configuring the Vault server")
@@ -35,9 +37,9 @@ var _ = framework.CertManagerDescribe("Vault Certificate (AppRole)", func() {
 		Expect(err).NotTo(HaveOccurred())
 		err = vaultInit.Setup()
 		Expect(err).NotTo(HaveOccurred())
-		roleId, secretId, err := vaultInit.CreateAppRole()
+		roleId, secretId, err = vaultInit.CreateAppRole()
 		Expect(err).NotTo(HaveOccurred())
-		_, err = f.KubeClientSet.CoreV1().Secrets(f.Namespace.Name).Create(util.NewVaultAppRoleSecret(vaultSecretAppRoleName, roleId, secretId))
+		_, err = f.KubeClientSet.CoreV1().Secrets(f.Namespace.Name).Create(util.NewVaultAppRoleSecret(vaultSecretAppRoleName, secretId))
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -91,7 +93,7 @@ var _ = framework.CertManagerDescribe("Vault Certificate (AppRole)", func() {
 		v := v
 		It("should generate a new certificate "+v.label, func() {
 			By("Creating an Issuer")
-			_, err := f.CertManagerClientSet.CertmanagerV1alpha1().Issuers(f.Namespace.Name).Create(util.NewCertManagerVaultIssuerAppRole(issuerName, vaultURL, vaultPath, vaultSecretAppRoleName, v.inputDuration, v.inputRenewBefore))
+			_, err := f.CertManagerClientSet.CertmanagerV1alpha1().Issuers(f.Namespace.Name).Create(util.NewCertManagerVaultIssuerAppRole(issuerName, vaultURL, vaultPath, roleId, vaultSecretAppRoleName, v.inputDuration, v.inputRenewBefore))
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Waiting for Issuer to become Ready")

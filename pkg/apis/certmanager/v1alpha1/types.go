@@ -108,9 +108,14 @@ type VaultIssuer struct {
 //   Vault and retrieve a token.
 type VaultAuth struct {
 	// This Secret contains the Vault token key
-	TokenSecretRef SecretKeySelector `json:"tokenSecretRef"`
+	TokenSecretRef SecretKeySelector `json:"tokenSecretRef,omitempty"`
 	// This Secret contains a AppRole and Secret
-	AppRoleSecretRef SecretKeySelector `json:"appRoleSecretRef"`
+	AppRole VaultAppRole `json:"appRoleSecret,omitempty"`
+}
+
+type VaultAppRole struct {
+	RoleId    string            `json:"roleId"`
+	SecretRef SecretKeySelector `json:"appRoleSecretRef"`
 }
 
 type CAIssuer struct {

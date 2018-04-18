@@ -24,8 +24,8 @@ const (
 	messageNamespaceRequired     = "resource namespace cannot be empty"
 	messageVaultConfigRequired   = "Vault config cannot be empty"
 	messageServerAndPathRequired = "Vault server and path are required fields"
-	messsageAuthFieldsRequired   = "Vault tokenSecretRef or appRoleSecretRef field is required"
-	messageAuthFieldRequired     = "Vault tokenSecretRef and appRoleSecretRef fields can be set on the same issuer"
+	messsageAuthFieldsRequired   = "Vault tokenSecretRef or appRole is required"
+	messageAuthFieldRequired     = "Vault tokenSecretRef and appRole cannot be set on the same issuer"
 	messageVaultDurationInvalid  = "Vault %s"
 )
 
@@ -68,12 +68,14 @@ func NewVault(issuerObj v1alpha1.GenericIssuer,
 	}
 
 	if issuerObj.GetSpec().Vault.Auth.TokenSecretRef.Name == "" &&
-		issuerObj.GetSpec().Vault.Auth.AppRoleSecretRef.Name == "" {
+		issuerObj.GetSpec().Vault.Auth.AppRole.RoleId == "" &&
+		issuerObj.GetSpec().Vault.Auth.AppRole.SecretRef.Name == "" {
 		return nil, updateEventAndCondition(fmt.Errorf(messsageAuthFieldsRequired), errorVaultAuthFieldsRequired, issuerObj, recorder)
 	}
 
 	if issuerObj.GetSpec().Vault.Auth.TokenSecretRef.Name != "" &&
-		issuerObj.GetSpec().Vault.Auth.AppRoleSecretRef.Name != "" {
+		(issuerObj.GetSpec().Vault.Auth.AppRole.RoleId != "" ||
+			issuerObj.GetSpec().Vault.Auth.AppRole.SecretRef.Name != "") {
 		return nil, updateEventAndCondition(fmt.Errorf(messageAuthFieldRequired), errorVaultAuthFieldsRequired, issuerObj, recorder)
 	}
 

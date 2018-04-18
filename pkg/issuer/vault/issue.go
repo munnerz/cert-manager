@@ -120,7 +120,7 @@ func (v *Vault) initVaultClient() (*vault.Client, error) {
 
 	tokenRef := v.issuer.GetSpec().Vault.Auth.TokenSecretRef
 	if tokenRef.Name != "" {
-		token, err := v.vaultTokenRef(tokenRef.Name)
+		token, err := v.vaultTokenRef(tokenRef.Name, tokenRef.Key)
 		if err != nil {
 			return nil, fmt.Errorf("error reading Vault token from secret %s/%s: %s", v.issuerResourcesNamespace, tokenRef.Name, err.Error())
 		}
@@ -129,11 +129,11 @@ func (v *Vault) initVaultClient() (*vault.Client, error) {
 		return client, nil
 	}
 
-	appRoleRef := v.issuer.GetSpec().Vault.Auth.AppRoleSecretRef
-	if appRoleRef.Name != "" {
-		token, err := v.requestTokenWithAppRoleRef(client, appRoleRef.Name)
+	appRole := v.issuer.GetSpec().Vault.Auth.AppRole
+	if appRole.RoleId != "" {
+		token, err := v.requestTokenWithAppRoleRef(client, &appRole)
 		if err != nil {
-			return nil, fmt.Errorf("error reading Vault token from secret %s/%s: %s", v.issuerResourcesNamespace, appRoleRef.Name, err.Error())
+			return nil, fmt.Errorf("error reading Vault token from secret %s/%s: %s", v.issuerResourcesNamespace, appRole.SecretRef.Name, err.Error())
 		}
 		client.SetToken(token)
 
@@ -143,10 +143,10 @@ func (v *Vault) initVaultClient() (*vault.Client, error) {
 	return nil, fmt.Errorf("error initializing Vault client. tokenSecretRef or appRoleSecretRef not set")
 }
 
-func (v *Vault) requestTokenWithAppRoleRef(client *vault.Client, appRoleRef string) (string, error) {
-	roleId, secretId, err := v.appRoleRef(appRoleRef)
+func (v *Vault) requestTokenWithAppRoleRef(client *vault.Client, appRole *v1alpha1.VaultAppRole) (string, error) {
+	roleId, secretId, err := v.appRoleRef(appRole)
 	if err != nil {
-		return "", fmt.Errorf("error reading Vault AppRole from secret: %s/%s: %s", v.issuerResourcesNamespace, appRoleRef, err.Error())
+		return "", fmt.Errorf("error reading Vault AppRole from secret: %s/%s: %s", appRole.SecretRef.Name, v.issuerResourcesNamespace, err.Error())
 	}
 
 	parameters := map[string]string{
@@ -240,23 +240,22 @@ func (v *Vault) requestVaultCert(commonName string, altNames []string, csr strin
 	return []byte(bundle.ToPEMBundle()), nil
 }
 
-func (v *Vault) appRoleRef(name string) (roleId, secretId string, err error) {
-	secret, err := v.secretsLister.Secrets(v.issuerResourcesNamespace).Get(name)
+func (v *Vault) appRoleRef(appRole *v1alpha1.VaultAppRole) (roleId, secretId string, err error) {
+	roleId = strings.TrimSpace(appRole.RoleId)
+
+	secret, err := v.secretsLister.Secrets(v.issuerResourcesNamespace).Get(appRole.SecretRef.Name)
 	if err != nil {
 		return "", "", err
 	}
 
-	keyBytes, ok := secret.Data["roleId"]
-	if !ok {
-		return "", "", fmt.Errorf("no data for %q in secret '%s/%s'", "roleId", v.issuerResourcesNamespace, name)
+	key := "secretId"
+	if appRole.SecretRef.Key != "secretId" {
+		key = appRole.SecretRef.Key
 	}
 
-	roleId = string(keyBytes)
-	roleId = strings.TrimSpace(roleId)
-
-	keyBytes, ok = secret.Data["secretId"]
+	keyBytes, ok := secret.Data[key]
 	if !ok {
-		return "", "", fmt.Errorf("no data for %q in secret '%s/%s'", "secretId", v.issuerResourcesNamespace, name)
+		return "", "", fmt.Errorf("no data for %q in secret '%s/%s'", key, appRole.SecretRef.Name, v.issuerResourcesNamespace)
 	}
 
 	secretId = string(keyBytes)
@@ -265,15 +264,19 @@ func (v *Vault) appRoleRef(name string) (roleId, secretId string, err error) {
 	return roleId, secretId, nil
 }
 
-func (v *Vault) vaultTokenRef(name string) (string, error) {
+func (v *Vault) vaultTokenRef(name, key string) (string, error) {
 	secret, err := v.secretsLister.Secrets(v.issuerResourcesNamespace).Get(name)
 	if err != nil {
 		return "", err
 	}
 
-	keyBytes, ok := secret.Data["token"]
+	if key == "" {
+		key = "token"
+	}
+
+	keyBytes, ok := secret.Data[key]
 	if !ok {
-		return "", fmt.Errorf("no data for %q in secret '%s/%s'", "token", v.issuerResourcesNamespace, name)
+		return "", fmt.Errorf("no data for %q in secret '%s/%s'", key, name, v.issuerResourcesNamespace)
 	}
 
 	token := string(keyBytes)

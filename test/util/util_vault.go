@@ -25,14 +25,13 @@ func NewVaultTokenSecret(name string) *v1.Secret {
 	}
 }
 
-func NewVaultAppRoleSecret(name, roleId, secretId string) *v1.Secret {
+func NewVaultAppRoleSecret(name, secretId string) *v1.Secret {
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 		StringData: map[string]string{
-			"roleId":   roleId,
-			"secretId": secretId,
+			"secretkey": secretId,
 		},
 	}
 }

@@ -393,6 +393,7 @@ func NewCertManagerVaultIssuerToken(name, vaultURL, vaultPath, vaultSecretToken 
 					Path:   vaultPath,
 					Auth: v1alpha1.VaultAuth{
 						TokenSecretRef: v1alpha1.SecretKeySelector{
+							Key: "secretkey",
 							LocalObjectReference: v1alpha1.LocalObjectReference{
 								Name: vaultSecretToken,
 							},
@@ -404,7 +405,7 @@ func NewCertManagerVaultIssuerToken(name, vaultURL, vaultPath, vaultSecretToken 
 	}
 }
 
-func NewCertManagerVaultIssuerAppRole(name, vaultURL, vaultPath, vaultSecretAppRole string, duration, renewBefore time.Duration) *v1alpha1.Issuer {
+func NewCertManagerVaultIssuerAppRole(name, vaultURL, vaultPath, roleId, vaultSecretAppRole string, duration, renewBefore time.Duration) *v1alpha1.Issuer {
 	return &v1alpha1.Issuer{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
@@ -417,9 +418,13 @@ func NewCertManagerVaultIssuerAppRole(name, vaultURL, vaultPath, vaultSecretAppR
 					Server: vaultURL,
 					Path:   vaultPath,
 					Auth: v1alpha1.VaultAuth{
-						AppRoleSecretRef: v1alpha1.SecretKeySelector{
-							LocalObjectReference: v1alpha1.LocalObjectReference{
-								Name: vaultSecretAppRole,
+						AppRole: v1alpha1.VaultAppRole{
+							RoleId: roleId,
+							SecretRef: v1alpha1.SecretKeySelector{
+								Key: "secretkey",
+								LocalObjectReference: v1alpha1.LocalObjectReference{
+									Name: vaultSecretAppRole,
+								},
 							},
 						},
 					},
