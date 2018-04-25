@@ -9,4 +9,4 @@ helping 'quickstart' common use-cases for the project.
 .. toctree::
    :maxdepth: 1
 
-   creating-vault-issuer
+   creating-vault-issuers
