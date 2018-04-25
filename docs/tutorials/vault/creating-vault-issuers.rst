@@ -5,7 +5,7 @@ Installing Vault
 ----------------
 
 Vault installation is a complex subject. For a thorough tour of the subject
-you can read the official Hashicorp Vault
+you can read the official HashiCorp Vault
 `documentation <https://www.vaultproject.io/intro/getting-started/install.html>`__.
 
 

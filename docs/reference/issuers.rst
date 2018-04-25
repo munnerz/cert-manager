@@ -192,7 +192,7 @@ Name                                  Description
                                       simple signing keypair, stored in a Secret
                                       in the Kubernetes API server
 :doc:`Vault <issuers/vault/index>`    Supports issuing certificates using
-                                      Hashicorp's Vault.
+                                      HashiCorp Vault.
 ===================================   =========================================
 
 Each Issuer resource is of one, and only one type. The type of an Issuer is
