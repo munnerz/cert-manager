@@ -76,7 +76,7 @@ expiration and need to be refreshed.  You need to be aware that cert-manager do 
 refresh these tokens. Another process must be put in place to keep them from expiring.
 
 For testing purpose a root token which do not expire is generated at Vault installation
-time. Beware, *a root token should only be used for testing purpose only*.
+time. **WARNING: a root token should only be used for testing purpose only**.
 
 Please refer to the official token `documentation <https://www.vaultproject.io/docs/concepts/tokens.html>`__
 for all the details.
