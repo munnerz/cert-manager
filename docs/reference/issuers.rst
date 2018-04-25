@@ -64,31 +64,27 @@ issuer.
 The table below shows the support state of the different backend services used
 the issuer types:
 
-------  ------------------------------------------------------------
-Issuer  Description
-======  ============================================================
-ACME    The protocol supports it but it is currently not implemented
-        in Boulder (Let's Encrypt).
-------  ------------------------------------------------------------
-CA      Fully supported.
-------  ------------------------------------------------------------
-Vault   Fully supported. (Although the requested duration must be
-        lower than the configured Vault role's TTL)
-------  ------------------------------------------------------------
+=======  ============================================================
+Issuer   Description
+=======  ============================================================
+ACME     The protocol supports it but it is currently not implemented
+         in Boulder (Let's Encrypt).
+CA       Fully supported.
+Vault    Fully supported. (Although the requested duration must be
+         lower than the configured Vault role's TTL)
+=======  ============================================================
 
 The table below shows the default duration and renewal window per
 issuer:
 
-------  -------------------------  -------------------------
+======  =========================  =========================
 Issuer  Duration                   RenewBefore
 ======  =========================  =========================
 ACME    Implementation dependent   Implementation dependent
         (Let's Encrypt - 90 days)  (Let's Encrypt - 30 days)
-------  -------------------------  -------------------------
 CA      365 days                   30 days
-------  -------------------------  -------------------------
 Vault   90 days                    30 days
-------  -------------------------  -------------------------
+======  =========================  =========================
 
 The *duration* and *renewBefore* parameters must be given in the golang
 `parseDuration string format <https://golang.org/pkg/time/#ParseDuration>`__.
