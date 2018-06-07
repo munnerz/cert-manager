@@ -21,18 +21,6 @@ import (
 )
 
 const (
-	errorGetCertKeyPair = "ErrGetKey"
-	errorIssueCert      = "ErrIssueCert"
-
-	successCertIssued = "CertIssueSuccess"
-
-	messageErrorGetCertKeyPair = "Error getting keypair for certificate: "
-	messageErrorIssueCert      = "Error issuing TLS certificate: "
-
-	messageCertIssued = "Certificate issued successfully"
-)
-
-const (
 	// certificateDuration of 1 year
 	certificateDuration = time.Hour * 24 * 365
 	defaultOrganization = "cert-manager"
@@ -46,20 +34,14 @@ func (c *SelfSigned) Issue(ctx context.Context, crt *v1alpha1.Certificate) ([]by
 	}
 
 	if err != nil {
-		s := messageErrorGetCertKeyPair + err.Error()
-		crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionFalse, errorGetCertKeyPair, s, false)
 		return nil, nil, err
 	}
 
 	certPem, err := c.obtainCertificate(crt, signeeKey)
 
 	if err != nil {
-		s := messageErrorIssueCert + err.Error()
-		crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionFalse, errorIssueCert, s, false)
 		return nil, nil, err
 	}
-
-	crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionTrue, successCertIssued, messageCertIssued, true)
 
 	return pki.EncodePKCS1PrivateKey(signeeKey), certPem, nil
 }

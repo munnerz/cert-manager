@@ -360,15 +360,19 @@ type CertificateCondition struct {
 type CertificateConditionType string
 
 const (
-	// CertificateConditionReady represents the fact that a given Certificate condition
-	// is in ready state.
-	CertificateConditionReady CertificateConditionType = "Ready"
+	// CertificateConditionValid represents the fact that a given Certificate condition
+	// is in valid state.
+	// This means the resulting Secret exists, is up to date (i.e. not past expiry)
+	// and also is valid for the domains listed.
+	// At present, this *does not* verify that the Certificate is signed by the
+	// Issuer specified.
+	CertificateConditionValid CertificateConditionType = "Valid"
 
-	// CertificateConditionValidationFailed is used to indicate whether a
+	// CertificateConditionACMEValidated is used to indicate whether a
 	// validation for a Certificate has failed.
 	// This is currently used by the ACME issuer to track when the last
 	// validation was attempted.
-	CertificateConditionValidationFailed CertificateConditionType = "ValidateFailed"
+	CertificateConditionACMEValidated CertificateConditionType = "Validated"
 )
 
 // CertificateACMEStatus holds the status for an ACME issuer

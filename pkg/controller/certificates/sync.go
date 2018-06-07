@@ -15,7 +15,6 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
-	"github.com/jetstack/cert-manager/pkg/issuer"
 	"github.com/jetstack/cert-manager/pkg/util"
 	"github.com/jetstack/cert-manager/pkg/util/errors"
 	"github.com/jetstack/cert-manager/pkg/util/kube"
@@ -30,19 +29,12 @@ const (
 	errorIssuerInit        = "IssuerInitError"
 	errorSavingCertificate = "SaveCertError"
 
-	reasonIssuingCertificate  = "IssueCert"
-	reasonRenewingCertificate = "RenewCert"
-
-	successCertificateIssued  = "CertIssued"
-	successCertificateRenewed = "CertRenewed"
+	reasonIssuingCertificate = "IssueCert"
+	reasonCertificateIssued  = "CertIssued"
 
 	messageErrorSavingCertificate = "Error saving TLS certificate: "
-
-	messageIssuingCertificate  = "Issuing certificate..."
-	messageRenewingCertificate = "Renewing certificate..."
-
-	messageCertificateIssued  = "Certificate issued successfully"
-	messageCertificateRenewed = "Certificate renewed successfully"
+	messageIssuingCertificate     = "Issuing certificate..."
+	messageCertificateIssued      = "Certificate issued successfully"
 )
 
 func (c *Controller) Sync(ctx context.Context, crt *v1alpha1.Certificate) (err error) {
@@ -67,7 +59,7 @@ func (c *Controller) Sync(ctx context.Context, crt *v1alpha1.Certificate) (err e
 		return fmt.Errorf(s)
 	}
 
-	i, err := c.issuerFactory.IssuerFor(issuerObj)
+	issuer, err := c.issuerFactory.IssuerFor(issuerObj)
 	if err != nil {
 		s := "Error initializing issuer: " + err.Error()
 		glog.Info(s)
@@ -78,7 +70,6 @@ func (c *Controller) Sync(ctx context.Context, crt *v1alpha1.Certificate) (err e
 	expectedCN := pki.CommonNameForCertificate(crt)
 	expectedDNSNames := pki.DNSNamesForCertificate(crt)
 	if expectedCN == "" || len(expectedDNSNames) == 0 {
-		// TODO: Set certificate invalid condition on certificate resource
 		// TODO: remove this check in favour of resource validation
 		return fmt.Errorf("certificate must specify at least one of dnsNames or commonName")
 	}
@@ -92,40 +83,83 @@ func (c *Controller) Sync(ctx context.Context, crt *v1alpha1.Certificate) (err e
 		return err
 	}
 
+	crtCopy := crt.DeepCopy()
+
 	// as there is an existing certificate, or we may create one below, we will
 	// run scheduleRenewal to schedule a renewal if required at the end of
 	// execution.
 	defer c.scheduleRenewal(crt)
+	defer func() {
+		// always call updateCertificateStatus after processing
+		err = utilerrors.NewAggregate([]error{err, c.updateCertificateStatus(crtCopy, cert)})
+	}()
 
-	crtCopy := crt.DeepCopy()
-
-	// if the certificate was not found, or the certificate data is invalid, we
-	// should issue a new certificate.
-	// if the certificate is valid for a list of domains other than those
-	// listed in the certificate spec, we should re-issue the certificate.
-	if k8sErrors.IsNotFound(err) || errors.IsInvalidData(err) ||
-		expectedCN != cert.Subject.CommonName || !util.EqualUnsorted(cert.DNSNames, expectedDNSNames) {
-		err := c.issue(ctx, i, crtCopy)
-		updateErr := c.updateCertificateStatus(crtCopy)
-		if err != nil || updateErr != nil {
-			return utilerrors.NewAggregate([]error{err, updateErr})
+	if err != nil {
+		// we will skip over not found or invalid data errors
+		if !k8sErrors.IsNotFound(err) && !errors.IsInvalidData(err) {
+			return err
 		}
+	}
+
+	var renewIn time.Duration
+	var validForDomains bool
+
+	if cert != nil {
+		// calculate the amount of time until expiry
+		durationUntilExpiry := cert.NotAfter.Sub(time.Now())
+		// calculate how long until we should start attempting to renew the
+		// certificate
+		renewIn = durationUntilExpiry - renewBefore
+
+		validForDomains = (expectedCN == cert.Subject.CommonName &&
+			util.EqualUnsorted(cert.DNSNames, expectedDNSNames))
+	}
+
+	if cert != nil && renewIn > 0 && validForDomains {
+		// if all these conditions are true, we do not need to process this
+		// certificate resource as it is already up to date
 		return nil
 	}
 
-	// calculate the amount of time until expiry
-	durationUntilExpiry := cert.NotAfter.Sub(time.Now())
-	// calculate how long until we should start attempting to renew the
-	// certificate
-	renewIn := durationUntilExpiry - renewBefore
-	// if we should being attempting to renew now, then trigger a renewal
-	if renewIn <= 0 {
-		err := c.renew(ctx, i, crtCopy)
-		updateErr := c.updateCertificateStatus(crtCopy)
-		if err != nil || updateErr != nil {
-			return utilerrors.NewAggregate([]error{err, updateErr})
-		}
+	// otherwise, we need to trigger issuance
+	isRenewal := (cert != nil)
+
+	glog.Infof("Preparing certificate %s/%s with issuer", crtCopy.Namespace, crtCopy.Name)
+	if err := issuer.Prepare(ctx, crtCopy); err != nil {
+		glog.Infof("Error preparing issuer for certificate %s/%s: %v", crtCopy.Namespace, crtCopy.Name, err)
+		return err
 	}
+
+	var keyBytes, certBytes []byte
+	if isRenewal {
+		keyBytes, certBytes, err = issuer.Renew(ctx, crtCopy)
+	} else {
+		keyBytes, certBytes, err = issuer.Issue(ctx, crtCopy)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	cert, err = pki.DecodeX509CertificateBytes(certBytes)
+	if err != nil {
+		return err
+	}
+
+	s := messageIssuingCertificate
+	glog.Info(s)
+	c.recorder.Event(crtCopy, api.EventTypeNormal, reasonIssuingCertificate, s)
+
+	if _, err := c.updateSecret(crtCopy, crtCopy.Namespace, certBytes, keyBytes); err != nil {
+		s := messageErrorSavingCertificate + err.Error()
+		glog.Info(s)
+		c.recorder.Event(crtCopy, api.EventTypeWarning, errorSavingCertificate, s)
+		return err
+	}
+
+	s = messageCertificateIssued
+	glog.Info(s)
+	c.recorder.Event(crtCopy, api.EventTypeNormal, reasonCertificateIssued, s)
 
 	return nil
 }
@@ -142,16 +176,6 @@ func (c *Controller) getGenericIssuer(crt *v1alpha1.Certificate) (v1alpha1.Gener
 	default:
 		return nil, fmt.Errorf(`invalid value %q for certificate issuer kind. Must be empty, %q or %q`, crt.Spec.IssuerRef.Kind, v1alpha1.IssuerKind, v1alpha1.ClusterIssuerKind)
 	}
-}
-
-func needsRenew(cert *x509.Certificate) bool {
-	durationUntilExpiry := cert.NotAfter.Sub(time.Now())
-	renewIn := durationUntilExpiry - renewBefore
-	// step three: check if referenced secret is valid (after start & before expiry)
-	if renewIn <= 0 {
-		return true
-	}
-	return false
 }
 
 func (c *Controller) scheduleRenewal(crt *v1alpha1.Certificate) {
@@ -232,81 +256,32 @@ func (c *Controller) updateSecret(crt *v1alpha1.Certificate, namespace string, c
 	return secret, nil
 }
 
-// return an error on failure. If retrieval is succesful, the certificate data
-// and private key will be stored in the named secret
-func (c *Controller) issue(ctx context.Context, issuer issuer.Interface, crt *v1alpha1.Certificate) error {
-	var err error
-	glog.Infof("Preparing certificate %s/%s with issuer", crt.Namespace, crt.Name)
-	if err = issuer.Prepare(ctx, crt); err != nil {
-		glog.Infof("Error preparing issuer for certificate %s/%s: %v", crt.Namespace, crt.Name, err)
-		return err
+func (c *Controller) updateCertificateStatus(crt *v1alpha1.Certificate, existingCert *x509.Certificate) error {
+	expectedCN := pki.CommonNameForCertificate(crt)
+	expectedDNSNames := pki.DNSNamesForCertificate(crt)
+
+	switch {
+	case existingCert == nil:
+		crt.UpdateStatusCondition(v1alpha1.CertificateConditionValid,
+			v1alpha1.ConditionFalse,
+			"NotFound",
+			fmt.Sprintf("Secret with name %q not found", crt.Spec.SecretName),
+			false)
+	case existingCert.NotAfter.After(time.Now()):
+		crt.UpdateStatusCondition(v1alpha1.CertificateConditionValid,
+			v1alpha1.ConditionFalse,
+			"Expired",
+			fmt.Sprintf("Certificate has passed expiry date (%s)", existingCert.NotAfter.Format(time.RFC822Z)),
+			false)
+	case expectedCN != existingCert.Subject.CommonName || !util.EqualUnsorted(existingCert.DNSNames, expectedDNSNames):
+		crt.UpdateStatusCondition(v1alpha1.CertificateConditionValid,
+			v1alpha1.ConditionFalse,
+			"DomainMismatch",
+			"Certificate not valid for listed domains",
+			false)
+	default:
+		crt.UpdateStatusCondition(v1alpha1.CertificateConditionACMEValidated, v1alpha1.ConditionTrue, "UpToDate", "Certificate is valid for listed domains", false)
 	}
-
-	s := messageIssuingCertificate
-	glog.Info(s)
-	c.recorder.Event(crt, api.EventTypeNormal, reasonIssuingCertificate, s)
-
-	var key, cert []byte
-	key, cert, err = issuer.Issue(ctx, crt)
-
-	if err != nil {
-		glog.Infof("Error issuing certificate for %s/%s: %v", crt.Namespace, crt.Name, err)
-		return err
-	}
-
-	if _, err := c.updateSecret(crt, crt.Namespace, cert, key); err != nil {
-		s := messageErrorSavingCertificate + err.Error()
-		glog.Info(s)
-		c.recorder.Event(crt, api.EventTypeWarning, errorSavingCertificate, s)
-		return err
-	}
-
-	s = messageCertificateIssued
-	glog.Info(s)
-	c.recorder.Event(crt, api.EventTypeNormal, successCertificateIssued, s)
-	crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionTrue, successCertificateIssued, s, true)
-
-	return nil
-}
-
-// renew will attempt to renew a certificate from the specified issuer, or
-// return an error on failure. If renewal is succesful, the certificate data
-// and private key will be stored in the named secret
-func (c *Controller) renew(ctx context.Context, issuer issuer.Interface, crt *v1alpha1.Certificate) error {
-	var err error
-	glog.Infof("Preparing certificate %s/%s with issuer", crt.Namespace, crt.Name)
-	if err = issuer.Prepare(ctx, crt); err != nil {
-		glog.Infof("Error preparing issuer for certificate %s/%s: %v", crt.Namespace, crt.Name, err)
-		return err
-	}
-
-	s := messageRenewingCertificate
-	glog.Info(s)
-	c.recorder.Event(crt, api.EventTypeNormal, reasonRenewingCertificate, s)
-
-	var key, cert []byte
-	key, cert, err = issuer.Renew(ctx, crt)
-
-	if err != nil {
-		return err
-	}
-
-	if _, err := c.updateSecret(crt, crt.Namespace, cert, key); err != nil {
-		s := messageErrorSavingCertificate + err.Error()
-		glog.Info(s)
-		c.recorder.Event(crt, api.EventTypeWarning, errorSavingCertificate, s)
-		return err
-	}
-
-	s = messageCertificateRenewed
-	glog.Info(s)
-	c.recorder.Event(crt, api.EventTypeNormal, successCertificateRenewed, s)
-	crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionTrue, successCertificateRenewed, s, true)
-
-	return nil
-}
-
-func (c *Controller) updateCertificateStatus(crt *v1alpha1.Certificate) error {
 	// TODO: replace Update call with UpdateStatus. This requires a custom API
 	// server with the /status subresource enabled and/or subresource support
 	// for CRDs (https://github.com/kubernetes/kubernetes/issues/38113)
