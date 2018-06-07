@@ -2,12 +2,17 @@ package v1alpha1
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/golang/glog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/clock"
 )
+
+// Clock is a simple wrapper around `time`.
+// We define it here so it is possible to switch out the clock
+// implementation during tests.
+var Clock clock.Clock = clock.RealClock{}
 
 func (i *IssuerStatus) ACMEStatus() *ACMEIssuerStatus {
 	if i.ACME == nil {
@@ -63,7 +68,7 @@ func (iss *Issuer) UpdateStatusCondition(conditionType IssuerConditionType, stat
 		Message: message,
 	}
 
-	t := time.Now()
+	t := Clock.Now()
 
 	if len(iss.Status.Conditions) == 0 {
 		glog.Infof("Setting lastTransitionTime for Issuer %q condition %q to %v", iss.Name, conditionType, t)
@@ -106,7 +111,7 @@ func (iss *ClusterIssuer) UpdateStatusCondition(conditionType IssuerConditionTyp
 		Message: message,
 	}
 
-	t := time.Now()
+	t := Clock.Now()
 
 	if len(iss.Status.Conditions) == 0 {
 		glog.Infof("Setting lastTransitionTime for ClusterIssuer %q condition %q to %v", iss.Name, conditionType, t)
@@ -149,7 +154,7 @@ func (crt *Certificate) UpdateStatusCondition(conditionType CertificateCondition
 		Message: message,
 	}
 
-	t := time.Now()
+	t := Clock.Now()
 
 	if len(crt.Status.Conditions) == 0 {
 		glog.Infof("Setting lastTransitionTime for Certificate %q condition %q to %v", crt.Name, conditionType, t)

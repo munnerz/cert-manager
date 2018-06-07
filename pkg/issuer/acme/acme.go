@@ -62,6 +62,11 @@ type Acme struct {
 	// variables.
 	// Currently, only AWS ambient credential control is implemented.
 	ambientCredentials bool
+
+	// clock interface used for determining the time.
+	// We define this as a field on the ACME structure so it can be easily
+	// swapped out during tests, in order to test time-sensitive parts of code.
+	clock clock.Clock
 }
 
 // solver solves ACME challenges by presenting the given token and key in an

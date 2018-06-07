@@ -3,6 +3,8 @@ package scheduler
 import (
 	"sync"
 	"time"
+
+	"k8s.io/utils/clock"
 )
 
 // ProcessFunc is a function to process an item in the work queue.
@@ -22,13 +24,14 @@ type ScheduledWorkQueue interface {
 
 type scheduledWorkQueue struct {
 	processFunc ProcessFunc
-	work        map[interface{}]*time.Timer
+	work        map[interface{}]clock.Timer
 	workLock    sync.Mutex
+	clock       clock.Clock
 }
 
 // NewScheduledWorkQueue will create a new workqueue with the given processFunc
 func NewScheduledWorkQueue(processFunc ProcessFunc) ScheduledWorkQueue {
-	return &scheduledWorkQueue{processFunc, make(map[interface{}]*time.Timer), sync.Mutex{}}
+	return &scheduledWorkQueue{processFunc, make(map[interface{}]clock.Timer), sync.Mutex{}, &clock.RealClock{}}
 }
 
 // Add will add an item to this queue, executing the ProcessFunc after the
@@ -39,10 +42,16 @@ func (s *scheduledWorkQueue) Add(obj interface{}, duration time.Duration) {
 	s.Forget(obj)
 	s.workLock.Lock()
 	defer s.workLock.Unlock()
-	s.work[obj] = time.AfterFunc(duration, func() {
+	timer := s.clock.NewTimer(duration)
+	s.work[obj] = timer
+	go func() {
 		defer s.Forget(obj)
+		t := <-timer.C()
+		if t.IsZero() {
+			return
+		}
 		s.processFunc(obj)
-	})
+	}()
 }
 
 // Forget will cancel the timer for the given object, if the timer exists.

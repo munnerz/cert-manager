@@ -74,7 +74,7 @@ func (a *Acme) Prepare(ctx context.Context, crt *v1alpha1.Certificate) error {
 	// if we should not attempt validation yet, return an error so the item
 	// will be requeued.
 	if nextPresentIn > 0 {
-		nextPresentTimeStr := time.Now().Add(nextPresentIn).Format(time.RFC822Z)
+		nextPresentTimeStr := a.clock.Now().Add(nextPresentIn).Format(time.RFC822Z)
 		crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionFalse, errorBackoff, fmt.Sprintf("Backing off %s until attempting re-validation", nextPresentIn), false)
 		return fmt.Errorf("not attempting acme validation until %s", nextPresentTimeStr)
 	}
@@ -462,7 +462,7 @@ func (a *Acme) shouldAttemptValidation(ctx context.Context, cl client.Interface,
 			}
 		}
 
-		return prepareAttemptWaitPeriod - (time.Now().Sub(condition.LastTransitionTime.Time)), order, nil
+		return prepareAttemptWaitPeriod - (a.clock.Now().Sub(condition.LastTransitionTime.Time)), order, nil
 	}
 
 	return 0, nil, fmt.Errorf("unrecognised existing acme order status: %q", order.Status)
