@@ -28,7 +28,7 @@ func (c *CA) Issue(ctx context.Context, crt *v1alpha1.Certificate) ([]byte, []by
 	signeeKey, err := kube.SecretTLSKey(c.secretsLister, crt.Namespace, crt.Spec.SecretName)
 
 	if k8sErrors.IsNotFound(err) || errors.IsInvalidData(err) {
-		signeeKey, err = pki.GenerateRSAPrivateKey(2048)
+		signeeKey, err = pki.GenerateRSAPrivateKey(crt)
 	}
 
 	if err != nil {

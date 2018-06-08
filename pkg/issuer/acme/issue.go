@@ -24,9 +24,6 @@ const (
 )
 
 func (a *Acme) obtainCertificate(ctx context.Context, crt *v1alpha1.Certificate) ([]byte, []byte, error) {
-	commonName := pki.CommonNameForCertificate(crt)
-	altNames := pki.DNSNamesForCertificate(crt)
-
 	cl, err := a.acmeClient()
 	if err != nil {
 		crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionFalse, errorIssueError, fmt.Sprintf("Failed to get ACME client: %v", err), false)
@@ -48,7 +45,7 @@ func (a *Acme) obtainCertificate(ctx context.Context, crt *v1alpha1.Certificate)
 	// get existing certificate private key
 	key, err := kube.SecretTLSKey(a.secretsLister, crt.Namespace, crt.Spec.SecretName)
 	if k8sErrors.IsNotFound(err) || errors.IsInvalidData(err) {
-		key, err = pki.GenerateRSAPrivateKey(2048)
+		key, err = pki.GenerateRSAPrivateKey(crt)
 		if err != nil {
 			crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionFalse, errorIssueError, fmt.Sprintf("Failed to generate certificate private key: %v", err), false)
 			return nil, nil, fmt.Errorf("error generating private key: %s", err.Error())
@@ -101,7 +98,7 @@ func (a *Acme) obtainCertificate(ctx context.Context, crt *v1alpha1.Certificate)
 
 	a.recorder.Eventf(crt, corev1.EventTypeNormal, successCertObtained, "Obtained certificate from ACME server")
 
-	glog.Infof("successfully obtained certificate: cn=%q altNames=%+v url=%q", commonName, altNames, orderURL)
+	glog.Infof("successfully obtained certificate: cn=%q altNames=%+v url=%q", template.Subject.CommonName, template.DNSNames, orderURL)
 	// encode the private key and return
 	return pki.EncodePKCS1PrivateKey(key), certBuffer.Bytes(), nil
 }

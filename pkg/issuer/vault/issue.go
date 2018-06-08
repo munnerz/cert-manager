@@ -53,7 +53,7 @@ func (v *Vault) obtainCertificate(ctx context.Context, crt *v1alpha1.Certificate
 	// get existing certificate private key
 	signeeKey, err := kube.SecretTLSKey(v.secretsLister, crt.Namespace, crt.Spec.SecretName)
 	if k8sErrors.IsNotFound(err) || errors.IsInvalidData(err) {
-		signeeKey, err = pki.GenerateRSAPrivateKey(keyBitSize)
+		signeeKey, err = pki.GenerateRSAPrivateKey(crt)
 		if err != nil {
 			return nil, nil, fmt.Errorf("error generating private key: %s", err.Error())
 		}

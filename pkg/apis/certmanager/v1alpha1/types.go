@@ -298,6 +298,10 @@ type CertificateSpec struct {
 	// invalid.
 	IssuerRef ObjectReference `json:"issuerRef"`
 
+	// KeySize specifies the private key size.
+	// If not specified, a default value of 2048 is used.
+	KeySize int32 `json:"keySize"`
+
 	ACME *ACMECertificateConfig `json:"acme,omitempty"`
 }
 

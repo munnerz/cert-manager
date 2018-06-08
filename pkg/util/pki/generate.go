@@ -5,9 +5,17 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+
+	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
 )
 
-func GenerateRSAPrivateKey(keySize int) (*rsa.PrivateKey, error) {
+// GenerateRSAPrivateKey generates a RSA private key with the parameters as specified
+// on the Certificate resource.
+func GenerateRSAPrivateKey(crt *v1alpha1.Certificate) (*rsa.PrivateKey, error) {
+	keySize := int(crt.Spec.KeySize)
+	if keySize == 0 {
+		keySize = 2048
+	}
 	return rsa.GenerateKey(rand.Reader, keySize)
 }
 

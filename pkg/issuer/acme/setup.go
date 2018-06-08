@@ -2,6 +2,7 @@ package acme
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
 	"strings"
@@ -111,7 +112,7 @@ func (a *Acme) registerAccount(ctx context.Context, cl client.Interface) (*acme.
 
 func (a *Acme) createAccountPrivateKey() (*rsa.PrivateKey, error) {
 	secretName, secretKey := a.acmeAccountPrivateKeyMeta()
-	accountPrivKey, err := pki.GenerateRSAPrivateKey(2048)
+	accountPrivKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err
 	}
