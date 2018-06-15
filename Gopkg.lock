@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "default"
+  name = "bitbucket.org/ww/goautoneg"
+  packages = ["."]
+  revision = "75cd24fc2f2c2a2088577d12123ddee5f54e0675"
+
+[[projects]]
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
   revision = "a5913b3f7deecba45e98ff33cefbac4fd204ddd7"
@@ -24,6 +30,24 @@
   ]
   revision = "6311d7a76f54cf2b6dea03d737d9bd9a6022ac5f"
   version = "v9.7.1"
+
+[[projects]]
+  name = "github.com/NYTimes/gziphandler"
+  packages = ["."]
+  revision = "2600fb119af974220d3916a5916d6e31176aac1b"
+  version = "v1.0.1"
+
+[[projects]]
+  name = "github.com/PuerkitoBio/purell"
+  packages = ["."]
+  revision = "0bcb03f4b4d0a9428594752bd2a3b9aa0a9d4bd4"
+  version = "v1.1.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/PuerkitoBio/urlesc"
+  packages = ["."]
+  revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
   branch = "master"
@@ -64,6 +88,37 @@
   revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
 
 [[projects]]
+  name = "github.com/coreos/etcd"
+  packages = [
+    "auth/authpb",
+    "client",
+    "clientv3",
+    "etcdserver/api/v3rpc/rpctypes",
+    "etcdserver/etcdserverpb",
+    "mvcc/mvccpb",
+    "pkg/pathutil",
+    "pkg/srv",
+    "pkg/tlsutil",
+    "pkg/transport",
+    "pkg/types",
+    "version"
+  ]
+  revision = "56536de5511128d0c7997aa2b792a4de575da536"
+  version = "v3.3.7"
+
+[[projects]]
+  name = "github.com/coreos/go-semver"
+  packages = ["semver"]
+  revision = "8ab6407b697782a06568d4b7f1db25550ec2e4c6"
+  version = "v0.2.0"
+
+[[projects]]
+  name = "github.com/coreos/go-systemd"
+  packages = ["daemon"]
+  revision = "39ca1b05acc7ad1220e09f133283b8859a8b71ab"
+  version = "v17"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -73,6 +128,33 @@
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
   revision = "d2709f9f1f31ebcda9651b03077758c1f3a0018c"
+  version = "v3.0.0"
+
+[[projects]]
+  name = "github.com/elazarl/go-bindata-assetfs"
+  packages = ["."]
+  revision = "30f82fa23fd844bd5bb1e5f216db87fd77b5eb43"
+  version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/emicklei/go-restful"
+  packages = [
+    ".",
+    "log"
+  ]
+  revision = "3658237ded108b4134956c1b3050349d93e7b895"
+  version = "v2.7.1"
+
+[[projects]]
+  name = "github.com/emicklei/go-restful-swagger12"
+  packages = ["."]
+  revision = "dcef7f55730566d41eae5db10e7d6981829720f6"
+  version = "1.0.1"
+
+[[projects]]
+  name = "github.com/evanphx/json-patch"
+  packages = ["."]
+  revision = "afac545df32f2287a079e2dfb7ba2745a643747e"
   version = "v3.0.0"
 
 [[projects]]
@@ -94,9 +176,35 @@
   version = "v1.28.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/jsonpointer"
+  packages = ["."]
+  revision = "3a0015ad55fa9873f41605d3e8f28cd279c32ab2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/jsonreference"
+  packages = ["."]
+  revision = "3fb327e6747da3043567ee86abd02bb6376b6be2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/spec"
+  packages = ["."]
+  revision = "bcff419492eeeb01f76e77d2ebc714dc97b607f5"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-openapi/swag"
+  packages = ["."]
+  revision = "811b1089cde9dad18d4d0c2d09fbdbf28dbd27a5"
+
+[[projects]]
   name = "github.com/gogo/protobuf"
   packages = [
+    "gogoproto",
     "proto",
+    "protoc-gen-gogo/descriptor",
     "sortkeys"
   ]
   revision = "100ba4e885062801d56799d78530b73b178a78f3"
@@ -115,7 +223,6 @@
   revision = "b710c8433bd175204919eb38776e944233235d03"
 
 [[projects]]
-  branch = "master"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -124,7 +231,7 @@
     "ptypes/duration",
     "ptypes/timestamp"
   ]
-  revision = "0a4f71a498b7c4812f64969510bcb4eca251e33a"
+  revision = "1643683e1b54a9e88ad26d98f81400c8c9d9f4f9"
 
 [[projects]]
   branch = "master"
@@ -268,6 +375,16 @@
   version = "1.0.3"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/mailru/easyjson"
+  packages = [
+    "buffer",
+    "jlexer",
+    "jwriter"
+  ]
+  revision = "3fdea8d05856a0c8df22ed4bc71b3219245e4485"
+
+[[projects]]
   name = "github.com/matttproud/golang_protobuf_extensions"
   packages = ["pbutil"]
   revision = "3247c84500bff8d9fb6d579d800f20b3e091582c"
@@ -334,6 +451,16 @@
   ]
   revision = "c893efa28eb45626cdaa76c9f653b62488858837"
   version = "v1.2.0"
+
+[[projects]]
+  name = "github.com/openshift/generic-admission-server"
+  packages = [
+    "pkg/apiserver",
+    "pkg/cmd",
+    "pkg/cmd/server",
+    "pkg/registry/admissionreview"
+  ]
+  revision = "76d182e57ce628bbf6eb266a7d26cf6c52adf551"
 
 [[projects]]
   name = "github.com/pborman/uuid"
@@ -418,6 +545,12 @@
   version = "v1.1.4"
 
 [[projects]]
+  name = "github.com/ugorji/go"
+  packages = ["codec"]
+  revision = "b4c50a2b199d93b13dc15e78929cfb23bfdf21ab"
+  version = "v1.1.1"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
@@ -438,8 +571,10 @@
     "http2",
     "http2/hpack",
     "idna",
+    "internal/timeseries",
     "lex/httplex",
-    "publicsuffix"
+    "trace",
+    "websocket"
   ]
   revision = "ab5485076ff3407ad2d02db054635913f017b0ed"
 
@@ -487,7 +622,8 @@
     "unicode/bidi",
     "unicode/cldr",
     "unicode/norm",
-    "unicode/rangetable"
+    "unicode/rangetable",
+    "width"
   ]
   revision = "836efe42bb4aa16aaa17b9c155d8813d336ed720"
 
@@ -535,10 +671,45 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "google.golang.org/genproto"
+  packages = ["googleapis/rpc/status"]
+  revision = "09f6ed296fc66555a25fe4ce95173148778dfa85"
+
+[[projects]]
+  name = "google.golang.org/grpc"
+  packages = [
+    ".",
+    "balancer",
+    "codes",
+    "connectivity",
+    "credentials",
+    "grpclb/grpc_lb_v1/messages",
+    "grpclog",
+    "health/grpc_health_v1",
+    "internal",
+    "keepalive",
+    "metadata",
+    "naming",
+    "peer",
+    "resolver",
+    "stats",
+    "status",
+    "tap",
+    "transport"
+  ]
+  revision = "5b3c4e850e90a4cf6a20ebd46c8b32a0a3afcb9e"
+
+[[projects]]
   name = "gopkg.in/inf.v0"
   packages = ["."]
   revision = "3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4"
   version = "v0.9.0"
+
+[[projects]]
+  name = "gopkg.in/natefinch/lumberjack.v2"
+  packages = ["."]
+  revision = "a96e63847dc3c67d17befa69c303767e2f84e54f"
+  version = "v2.1"
 
 [[projects]]
   branch = "v2"
@@ -549,6 +720,7 @@
 [[projects]]
   name = "k8s.io/api"
   packages = [
+    "admission/v1beta1",
     "admissionregistration/v1alpha1",
     "admissionregistration/v1beta1",
     "apps/v1",
@@ -596,15 +768,19 @@
 [[projects]]
   name = "k8s.io/apimachinery"
   packages = [
+    "pkg/api/equality",
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
+    "pkg/api/validation",
+    "pkg/api/validation/path",
     "pkg/apimachinery",
     "pkg/apimachinery/announced",
     "pkg/apimachinery/registered",
     "pkg/apis/meta/internalversion",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
+    "pkg/apis/meta/v1/validation",
     "pkg/apis/meta/v1beta1",
     "pkg/conversion",
     "pkg/conversion/queryparams",
@@ -629,6 +805,7 @@
     "pkg/util/json",
     "pkg/util/mergepatch",
     "pkg/util/net",
+    "pkg/util/rand",
     "pkg/util/runtime",
     "pkg/util/sets",
     "pkg/util/strategicpatch",
@@ -636,6 +813,7 @@
     "pkg/util/validation",
     "pkg/util/validation/field",
     "pkg/util/wait",
+    "pkg/util/waitgroup",
     "pkg/util/yaml",
     "pkg/version",
     "pkg/watch",
@@ -644,6 +822,100 @@
   ]
   revision = "302974c03f7e50f16561ba237db776ab93594ef6"
   version = "kubernetes-1.10.0-beta.1"
+
+[[projects]]
+  name = "k8s.io/apiserver"
+  packages = [
+    "pkg/admission",
+    "pkg/admission/configuration",
+    "pkg/admission/initializer",
+    "pkg/admission/metrics",
+    "pkg/admission/plugin/initialization",
+    "pkg/admission/plugin/namespace/lifecycle",
+    "pkg/admission/plugin/webhook/config",
+    "pkg/admission/plugin/webhook/config/apis/webhookadmission",
+    "pkg/admission/plugin/webhook/config/apis/webhookadmission/v1alpha1",
+    "pkg/admission/plugin/webhook/errors",
+    "pkg/admission/plugin/webhook/mutating",
+    "pkg/admission/plugin/webhook/namespace",
+    "pkg/admission/plugin/webhook/request",
+    "pkg/admission/plugin/webhook/rules",
+    "pkg/admission/plugin/webhook/validating",
+    "pkg/admission/plugin/webhook/versioned",
+    "pkg/apis/apiserver",
+    "pkg/apis/apiserver/install",
+    "pkg/apis/apiserver/v1alpha1",
+    "pkg/apis/audit",
+    "pkg/apis/audit/install",
+    "pkg/apis/audit/v1alpha1",
+    "pkg/apis/audit/v1beta1",
+    "pkg/apis/audit/validation",
+    "pkg/audit",
+    "pkg/audit/policy",
+    "pkg/authentication/authenticator",
+    "pkg/authentication/authenticatorfactory",
+    "pkg/authentication/group",
+    "pkg/authentication/request/anonymous",
+    "pkg/authentication/request/bearertoken",
+    "pkg/authentication/request/headerrequest",
+    "pkg/authentication/request/union",
+    "pkg/authentication/request/websocket",
+    "pkg/authentication/request/x509",
+    "pkg/authentication/serviceaccount",
+    "pkg/authentication/token/tokenfile",
+    "pkg/authentication/user",
+    "pkg/authorization/authorizer",
+    "pkg/authorization/authorizerfactory",
+    "pkg/authorization/union",
+    "pkg/endpoints",
+    "pkg/endpoints/discovery",
+    "pkg/endpoints/filters",
+    "pkg/endpoints/handlers",
+    "pkg/endpoints/handlers/negotiation",
+    "pkg/endpoints/handlers/responsewriters",
+    "pkg/endpoints/metrics",
+    "pkg/endpoints/openapi",
+    "pkg/endpoints/request",
+    "pkg/features",
+    "pkg/registry/generic",
+    "pkg/registry/generic/registry",
+    "pkg/registry/rest",
+    "pkg/server",
+    "pkg/server/filters",
+    "pkg/server/healthz",
+    "pkg/server/httplog",
+    "pkg/server/mux",
+    "pkg/server/options",
+    "pkg/server/resourceconfig",
+    "pkg/server/routes",
+    "pkg/server/routes/data/swagger",
+    "pkg/server/storage",
+    "pkg/storage",
+    "pkg/storage/errors",
+    "pkg/storage/etcd",
+    "pkg/storage/etcd/metrics",
+    "pkg/storage/etcd/util",
+    "pkg/storage/etcd3",
+    "pkg/storage/etcd3/preflight",
+    "pkg/storage/names",
+    "pkg/storage/storagebackend",
+    "pkg/storage/storagebackend/factory",
+    "pkg/storage/value",
+    "pkg/util/feature",
+    "pkg/util/flag",
+    "pkg/util/flushwriter",
+    "pkg/util/logs",
+    "pkg/util/trace",
+    "pkg/util/webhook",
+    "pkg/util/wsstream",
+    "plugin/pkg/audit/buffered",
+    "plugin/pkg/audit/log",
+    "plugin/pkg/audit/webhook",
+    "plugin/pkg/authenticator/token/webhook",
+    "plugin/pkg/authorizer/webhook"
+  ]
+  revision = "5ae41ac86efd753e2ba012f097b83a914b268236"
+  version = "kubernetes-1.10.0"
 
 [[projects]]
   name = "k8s.io/client-go"
@@ -865,14 +1137,19 @@
   version = "0.9.6"
 
 [[projects]]
-  branch = "master"
   name = "k8s.io/kube-openapi"
-  packages = ["pkg/util/proto"]
-  revision = "39a7bf85c140f972372c2a0d1ee40adbf0c8bfe1"
+  packages = [
+    "pkg/builder",
+    "pkg/common",
+    "pkg/handler",
+    "pkg/util",
+    "pkg/util/proto"
+  ]
+  revision = "50ae88d24ede7b8bad68e23c805b5d3da5c8abaf"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dff763eedaff6d5d8e98a17b7f5f551885d4a576fb4cc3a27fca1648bf8b2004"
+  inputs-digest = "a5628285d1ecc6917db843c5c2aeac3b410c03758781f05453a9aea8b0b90caa"
   solver-name = "gps-cdcl"
   solver-version = 1
