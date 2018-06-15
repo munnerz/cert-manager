@@ -88,6 +88,7 @@ func GenerateTemplate(issuer v1alpha1.GenericIssuer, crt *v1alpha1.Certificate, 
 		BasicConstraintsValid: true,
 		SerialNumber:          serialNumber,
 		SignatureAlgorithm:    defaultSignatureAlgorithm,
+		IsCA:                  crt.Spec.IsCA,
 		Subject: pkix.Name{
 			Organization: []string{defaultOrganization},
 			CommonName:   commonName,

@@ -293,6 +293,9 @@ type CertificateSpec struct {
 	CommonName string `json:"commonName"`
 	// DNSNames is a list of subject alt names to be used on the Certificate
 	DNSNames []string `json:"dnsNames"`
+	// IsCA will mark this Certificate as valid for signing.
+	// This implies that the 'signing' usage is set
+	IsCA bool `json:"isCA"`
 	// SecretName is the name of the secret resource to store this secret in
 	SecretName string `json:"secretName"`
 	// IssuerRef is a reference to the issuer for this certificate. If the
