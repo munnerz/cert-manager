@@ -1,0 +1,54 @@
+---
+# Create a selfsigned Issuer, in order to create a root CA certificate for
+# signing webhook serving certificates
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Issuer
+metadata:
+  name: "{{ template "cert-manager.webhook.selfSignedIssuer" . }}"
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  selfsigned: {}
+
+---
+
+# Generate a CA Certificate used to sign certificates for the webhook
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: "{{ template "cert-manager.webhook.rootCACertificate" . }}"
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  secretName: "{{ template "cert-manager.webhook.rootCACertificate" . }}"
+  issuerRef:
+    name: "{{ template "cert-manager.webhook.selfSignedIssuer" . }}"
+  commonName: "ca.webhook.cert-manager"
+  isCA: true
+
+---
+
+# Create an Issuer that uses the above generated CA certificate to issue certs
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Issuer
+metadata:
+  name: "{{ template "cert-manager.webhook.issuer" . }}"
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  ca:
+    secretName: "{{ template "cert-manager.webhook.rootCACertificate" . }}"
+
+---
+
+# Finally, generate a serving certificate for the webhook to use
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: "{{ template "cert-manager.webhook.certificate" . }}"
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  secretName: "{{ template "cert-manager.webhook.certificate" . }}"
+  issuerRef:
+    name: "{{ template "cert-manager.webhook.issuer" . }}"
+  dnsNames:
+  - "{{ template "cert-manager.webhook.serviceName" . }}"
+  - "{{ template "cert-manager.webhook.serviceName" . }}.{{ .Release.Namespace }}"
+  - "{{ template "cert-manager.webhook.serviceName" . }}.{{ .Release.Namespace }}.svc"

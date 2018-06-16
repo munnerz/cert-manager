@@ -32,10 +32,6 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          volumeMounts:
-          - name: localmanifests
-            mountPath: /etc/cert-manager/manifests
-            readOnly: true
           args:
         {{- if .Values.clusterResourceNamespace }}
           - --cluster-resource-namespace={{ .Values.clusterResourceNamespace }}
@@ -71,10 +67,6 @@ spec:
                 fieldPath: metadata.namespace
           resources:
 {{ toYaml .Values.resources | indent 12 }}
-      volumes:
-      - name: localmanifests
-        configMap:
-          name: "{{ template "cert-manager.fullname" . }}"
     {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}

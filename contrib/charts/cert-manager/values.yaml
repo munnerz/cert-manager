@@ -70,8 +70,6 @@ webhook:
 
   replicaCount: 1
 
-  caSecret: "ca-key-pair"
-
   podAnnotations: {}
 
   # Optional additional arguments for webhook

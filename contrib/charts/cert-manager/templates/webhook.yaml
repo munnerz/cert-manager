@@ -2,8 +2,14 @@ apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: {{ template "cert-manager.fullname" . }}-validation
-webHooks:
+webhooks:
   - name: certificates.admission.certmanager.k8s.io
+    namespaceSelector:
+      matchExpressions:
+      - key: "certmanager.k8s.io/disable-validation"
+        operator: "NotIn"
+        values:
+        - "true"
     rules:
       - apiGroups:
           - "certmanager.k8s.io"
@@ -21,6 +27,12 @@ webHooks:
         namespace: default
         path: /apis/admission.certmanager.k8s.io/v1beta1/certificates
   - name: issuers.admission.certmanager.k8s.io
+    namespaceSelector:
+      matchExpressions:
+      - key: "certmanager.k8s.io/disable-validation"
+        operator: "NotIn"
+        values:
+        - "true"
     rules:
       - apiGroups:
           - "certmanager.k8s.io"
@@ -38,6 +50,12 @@ webHooks:
         namespace: default
         path: /apis/admission.certmanager.k8s.io/v1beta1/issuers
   - name: clusterissuers.admission.certmanager.k8s.io
+    namespaceSelector:
+      matchExpressions:
+      - key: "certmanager.k8s.io/disable-validation"
+        operator: "NotIn"
+        values:
+        - "true"
     rules:
       - apiGroups:
           - "certmanager.k8s.io"

@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: {{ template "cert-manager.fullname" . }}-ca-sync
 spec:
-  schedule: "* */1 * * *"
+  schedule: "* * */24 * *"
   jobTemplate:
     spec:
       template:
