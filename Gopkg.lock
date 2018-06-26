@@ -577,8 +577,8 @@
     "storage/v1alpha1",
     "storage/v1beta1"
   ]
-  revision = "73d903622b7391f3312dcbac6483fed484e185f8"
-  version = "kubernetes-1.10.0-beta.3"
+  revision = "6c0bbc3e58fab96285be9b6ed41b12b58c737a96"
+  version = "kubernetes-1.10.5"
 
 [[projects]]
   name = "k8s.io/apiextensions-apiserver"
@@ -589,10 +589,11 @@
     "pkg/client/clientset/clientset/scheme",
     "pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
   ]
-  revision = "750feebe2038bad00fdf68ba37c31f62c4f1f891"
-  version = "kubernetes-1.10.0"
+  revision = "80db67131e8de08bc0767eaeb9c1fd768a7ca30f"
+  version = "kubernetes-1.10.5"
 
 [[projects]]
+  branch = "release-1.10"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
@@ -641,8 +642,7 @@
     "third_party/forked/golang/json",
     "third_party/forked/golang/reflect"
   ]
-  revision = "302974c03f7e50f16561ba237db776ab93594ef6"
-  version = "kubernetes-1.10.0-beta.1"
+  revision = "e386b2658ed20923da8cc9250e552f082899a1ee"
 
 [[projects]]
   name = "k8s.io/client-go"
@@ -807,10 +807,11 @@
     "util/retry",
     "util/workqueue"
   ]
-  revision = "23781f4d6632d88e869066eaebb743857aa1ef9b"
-  version = "v7.0.0"
+  revision = "b0722d92a7c1f91106a7cb0f5437821b5cd51a41"
+  version = "kubernetes-1.10.5"
 
 [[projects]]
+  branch = "release-1.10"
   name = "k8s.io/code-generator"
   packages = [
     "cmd/client-gen",
@@ -836,8 +837,7 @@
     "cmd/lister-gen/generators",
     "pkg/util"
   ]
-  revision = "7ead8f38b01cf8653249f5af80ce7b2c8aba12e2"
-  version = "kubernetes-1.10.0-beta.1"
+  revision = "9de8e796a74d16d2a285165727d04c185ebca6dc"
 
 [[projects]]
   name = "k8s.io/gengo"
@@ -872,6 +872,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0950e8204b2b6dcc7641243817171611f11d58ef6d3f59b42160fa10389249d9"
+  inputs-digest = "8ea5e274cb272e9b4b871a8f06cb1554a19d1db6f806ae1596c8e2b0888c556b"
   solver-name = "gps-cdcl"
   solver-version = 1
