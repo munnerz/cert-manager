@@ -49,35 +49,30 @@ type Solver struct {
 	dnsProviderConstructors dnsProviderConstructors
 }
 
-func (s *Solver) Present(ctx context.Context, issuer v1alpha1.GenericIssuer, _ *v1alpha1.Certificate, ch v1alpha1.ACMEOrderChallenge) error {
-	if ch.SolverConfig.DNS01 == nil {
+func (s *Solver) Present(ctx context.Context, issuer v1alpha1.GenericIssuer, ch *v1alpha1.Challenge) error {
+	if ch.Spec.Config.DNS01 == nil {
 		return fmt.Errorf("challenge dns config must be specified")
 	}
 
-	providerName := ch.SolverConfig.DNS01.Provider
-	if providerName == "" {
-		return fmt.Errorf("dns01 challenge provider name must be set")
-	}
-
-	slv, err := s.solverForIssuerProvider(issuer, providerName)
+	slv, err := s.solverForChallenge(issuer, ch)
 	if err != nil {
 		return err
 	}
 
-	glog.Infof("Presenting DNS01 challenge for domain %q", ch.Domain)
-	return slv.Present(ch.Domain, ch.Token, ch.Key)
+	glog.Infof("Presenting DNS01 challenge for domain %q", ch.Spec.DNSName)
+	return slv.Present(ch.Spec.DNSName, ch.Spec.Token, ch.Spec.Key)
 }
 
-func (s *Solver) Check(ch v1alpha1.ACMEOrderChallenge) (bool, error) {
-	fqdn, value, ttl := util.DNS01Record(ch.Domain, ch.Key)
-	glog.Infof("Checking DNS propagation for %q using name servers: %v", ch.Domain, s.DNS01Nameservers)
+func (s *Solver) Check(ch *v1alpha1.Challenge) (bool, error) {
+	fqdn, value, ttl := util.DNS01Record(ch.Spec.DNSName, ch.Spec.Key)
+	glog.Infof("Checking DNS propagation for %q using name servers: %v", ch.Spec.DNSName, s.Context.DNS01Nameservers)
 
-	ok, err := util.PreCheckDNS(fqdn, value, s.DNS01Nameservers)
+	ok, err := util.PreCheckDNS(fqdn, value, s.Context.DNS01Nameservers)
 	if err != nil {
 		return false, err
 	}
 	if !ok {
-		glog.Infof("DNS record for %q not yet propagated", ch.Domain)
+		glog.Infof("DNS record for %q not yet propagated", ch.Spec.DNSName)
 		return false, nil
 	}
 
@@ -88,34 +83,31 @@ func (s *Solver) Check(ch v1alpha1.ACMEOrderChallenge) (bool, error) {
 	return true, nil
 }
 
-func (s *Solver) CleanUp(ctx context.Context, issuer v1alpha1.GenericIssuer, _ *v1alpha1.Certificate, ch v1alpha1.ACMEOrderChallenge) error {
-	if ch.SolverConfig.DNS01 == nil {
+func (s *Solver) CleanUp(ctx context.Context, issuer v1alpha1.GenericIssuer, ch *v1alpha1.Challenge) error {
+	if ch.Spec.Config.DNS01 == nil {
 		return fmt.Errorf("challenge dns config must be specified")
 	}
 
-	providerName := ch.SolverConfig.DNS01.Provider
-	if providerName == "" {
-		return fmt.Errorf("dns01 challenge provider name must be set")
-	}
-
-	slv, err := s.solverForIssuerProvider(issuer, providerName)
+	slv, err := s.solverForChallenge(issuer, ch)
 	if err != nil {
 		return err
 	}
 
-	return slv.CleanUp(ch.Domain, ch.Token, ch.Key)
+	return slv.CleanUp(ch.Spec.DNSName, ch.Spec.Token, ch.Spec.Key)
 }
 
-// solverForIssuerProvider returns a Solver for the given providerName.
+// solverForChallenge returns a Solver for the given providerName.
 // The providerName is the name of an ACME DNS-01 challenge provider as
 // specified on the Issuer resource for the Solver.
-//
-// This method is exported so that only the provider name is required in order
-// to obtain an instance of a Solver. This is useful when cleaning up old
-// challenges after the ACME challenge configuration on the Certificate has
-// been removed by the user.
-func (s *Solver) solverForIssuerProvider(issuer v1alpha1.GenericIssuer, providerName string) (solver, error) {
+func (s *Solver) solverForChallenge(issuer v1alpha1.GenericIssuer, ch *v1alpha1.Challenge) (solver, error) {
 	resourceNamespace := s.ResourceNamespace(issuer)
+	canUseAmbientCredentials := s.CanUseAmbientCredentials(issuer)
+
+	providerName := ch.Spec.Config.DNS01.Provider
+	if providerName == "" {
+		return nil, fmt.Errorf("dns01 challenge provider name must be set")
+	}
+
 	providerConfig, err := issuer.GetSpec().ACME.DNS01.Provider(providerName)
 	if err != nil {
 		return nil, err
@@ -197,7 +189,7 @@ func (s *Solver) solverForIssuerProvider(issuer v1alpha1.GenericIssuer, provider
 			strings.TrimSpace(secretAccessKey),
 			providerConfig.Route53.HostedZoneID,
 			providerConfig.Route53.Region,
-			s.CanUseAmbientCredentials(issuer),
+			canUseAmbientCredentials,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error instantiating route53 challenge solver: %s", err)

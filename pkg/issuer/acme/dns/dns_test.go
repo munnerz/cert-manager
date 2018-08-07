@@ -32,18 +32,6 @@ func newIssuer(name, namespace string, configs []v1alpha1.ACMEIssuerDNS01Provide
 	}
 }
 
-func newCertificate(name, namespace, cn string, dnsNames []string, configs []v1alpha1.DomainSolverConfig) *v1alpha1.Certificate {
-	return &v1alpha1.Certificate{
-		Spec: v1alpha1.CertificateSpec{
-			CommonName: cn,
-			DNSNames:   dnsNames,
-			ACME: &v1alpha1.ACMECertificateConfig{
-				Config: configs,
-			},
-		},
-	}
-}
-
 func newSecret(name, namespace string, data map[string][]byte) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -84,10 +72,12 @@ func TestSolverFor(t *testing.T) {
 						},
 					},
 				}),
-				Challenge: v1alpha1.ACMEOrderChallenge{
-					SolverConfig: v1alpha1.SolverConfig{
-						DNS01: &v1alpha1.DNS01SolverConfig{
-							Provider: "fake-cloudflare",
+				Challenge: &v1alpha1.Challenge{
+					Spec: v1alpha1.ChallengeSpec{
+						Config: v1alpha1.SolverConfig{
+							DNS01: &v1alpha1.DNS01SolverConfig{
+								Provider: "fake-cloudflare",
+							},
 						},
 					},
 				},
@@ -112,10 +102,12 @@ func TestSolverFor(t *testing.T) {
 					},
 				}),
 				// don't include any secrets in the lister
-				Challenge: v1alpha1.ACMEOrderChallenge{
-					SolverConfig: v1alpha1.SolverConfig{
-						DNS01: &v1alpha1.DNS01SolverConfig{
-							Provider: "fake-cloudflare",
+				Challenge: &v1alpha1.Challenge{
+					Spec: v1alpha1.ChallengeSpec{
+						Config: v1alpha1.SolverConfig{
+							DNS01: &v1alpha1.DNS01SolverConfig{
+								Provider: "fake-cloudflare",
+							},
 						},
 					},
 				},
@@ -146,10 +138,12 @@ func TestSolverFor(t *testing.T) {
 						},
 					},
 				}),
-				Challenge: v1alpha1.ACMEOrderChallenge{
-					SolverConfig: v1alpha1.SolverConfig{
-						DNS01: &v1alpha1.DNS01SolverConfig{
-							Provider: "fake-cloudflare",
+				Challenge: &v1alpha1.Challenge{
+					Spec: v1alpha1.ChallengeSpec{
+						Config: v1alpha1.SolverConfig{
+							DNS01: &v1alpha1.DNS01SolverConfig{
+								Provider: "fake-cloudflare",
+							},
 						},
 					},
 				},
@@ -180,10 +174,12 @@ func TestSolverFor(t *testing.T) {
 						},
 					},
 				}),
-				Challenge: v1alpha1.ACMEOrderChallenge{
-					SolverConfig: v1alpha1.SolverConfig{
-						DNS01: &v1alpha1.DNS01SolverConfig{
-							Provider: "fake-cloudflare-oops",
+				Challenge: &v1alpha1.Challenge{
+					Spec: v1alpha1.ChallengeSpec{
+						Config: v1alpha1.SolverConfig{
+							DNS01: &v1alpha1.DNS01SolverConfig{
+								Provider: "fake-cloudflare-oops",
+							},
 						},
 					},
 				},
@@ -197,7 +193,7 @@ func TestSolverFor(t *testing.T) {
 			test.Setup(t)
 			defer test.Finish(t)
 			s := test.Solver
-			dnsSolver, err := s.solverForIssuerProvider(test.Issuer, test.Challenge.SolverConfig.DNS01.Provider)
+			dnsSolver, err := s.solverForChallenge(test.Issuer, test.Challenge)
 			if err != nil && !test.expectErr {
 				t.Errorf("expected solverFor to not error, but got: %s", err.Error())
 				return
@@ -238,10 +234,12 @@ func TestRoute53TrimCreds(t *testing.T) {
 				},
 			},
 		}),
-		Challenge: v1alpha1.ACMEOrderChallenge{
-			SolverConfig: v1alpha1.SolverConfig{
-				DNS01: &v1alpha1.DNS01SolverConfig{
-					Provider: "fake-route53",
+		Challenge: &v1alpha1.Challenge{
+			Spec: v1alpha1.ChallengeSpec{
+				Config: v1alpha1.SolverConfig{
+					DNS01: &v1alpha1.DNS01SolverConfig{
+						Provider: "fake-route53",
+					},
 				},
 			},
 		},
@@ -252,7 +250,7 @@ func TestRoute53TrimCreds(t *testing.T) {
 	defer f.Finish(t)
 
 	s := f.Solver
-	_, err := s.solverForIssuerProvider(f.Issuer, f.Challenge.SolverConfig.DNS01.Provider)
+	_, err := s.solverForChallenge(f.Issuer, f.Challenge)
 	if err != nil {
 		t.Fatalf("expected solverFor to not error, but got: %s", err)
 	}
@@ -297,10 +295,12 @@ func TestRoute53AmbientCreds(t *testing.T) {
 					},
 				}),
 				dnsProviders: newFakeDNSProviders(),
-				Challenge: v1alpha1.ACMEOrderChallenge{
-					SolverConfig: v1alpha1.SolverConfig{
-						DNS01: &v1alpha1.DNS01SolverConfig{
-							Provider: "fake-route53",
+				Challenge: &v1alpha1.Challenge{
+					Spec: v1alpha1.ChallengeSpec{
+						Config: v1alpha1.SolverConfig{
+							DNS01: &v1alpha1.DNS01SolverConfig{
+								Provider: "fake-route53",
+							},
 						},
 					},
 				},
@@ -330,10 +330,12 @@ func TestRoute53AmbientCreds(t *testing.T) {
 					},
 				}),
 				dnsProviders: newFakeDNSProviders(),
-				Challenge: v1alpha1.ACMEOrderChallenge{
-					SolverConfig: v1alpha1.SolverConfig{
-						DNS01: &v1alpha1.DNS01SolverConfig{
-							Provider: "fake-route53",
+				Challenge: &v1alpha1.Challenge{
+					Spec: v1alpha1.ChallengeSpec{
+						Config: v1alpha1.SolverConfig{
+							DNS01: &v1alpha1.DNS01SolverConfig{
+								Provider: "fake-route53",
+							},
 						},
 					},
 				},
@@ -352,7 +354,7 @@ func TestRoute53AmbientCreds(t *testing.T) {
 		f.Setup(t)
 		defer f.Finish(t)
 		s := f.Solver
-		_, err := s.solverForIssuerProvider(f.Issuer, f.Challenge.SolverConfig.DNS01.Provider)
+		_, err := s.solverForChallenge(f.Issuer, f.Challenge)
 		if !reflect.DeepEqual(tt.out.expectedErr, err) {
 			t.Fatalf("expected error %v, got error %v", tt.out.expectedErr, err)
 		}
