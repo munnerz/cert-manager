@@ -9,6 +9,8 @@ import (
 
 	"github.com/jetstack/cert-manager/pkg/util"
 
+	challengescontroller "github.com/jetstack/cert-manager/pkg/controller/acmechallenges"
+	orderscontroller "github.com/jetstack/cert-manager/pkg/controller/acmeorders"
 	certificatescontroller "github.com/jetstack/cert-manager/pkg/controller/certificates"
 	clusterissuerscontroller "github.com/jetstack/cert-manager/pkg/controller/clusterissuers"
 	ingressshimcontroller "github.com/jetstack/cert-manager/pkg/controller/ingress-shim"
@@ -69,6 +71,8 @@ var (
 		clusterissuerscontroller.ControllerName,
 		certificatescontroller.ControllerName,
 		ingressshimcontroller.ControllerName,
+		orderscontroller.ControllerName,
+		challengescontroller.ControllerName,
 	}
 )
 
