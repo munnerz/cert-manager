@@ -76,6 +76,12 @@
   revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
 
 [[projects]]
+  name = "github.com/cpuguy83/go-md2man"
+  packages = ["md2man"]
+  revision = "20f5889cbdc3c73dbd2862796665e7c465ade7d1"
+  version = "v1.0.8"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -440,6 +446,12 @@
   revision = "e645f4e5aaa8506fc71d6edbc5c4ff02c04c46f2"
 
 [[projects]]
+  name = "github.com/russross/blackfriday"
+  packages = ["."]
+  revision = "55d61fa8aa702f59229e6cff85793c22e580eaf5"
+  version = "v1.5.1"
+
+[[projects]]
   name = "github.com/ryanuber/go-glob"
   packages = ["."]
   revision = "572520ed46dbddaed19ea3d9541bdd0494163693"
@@ -452,16 +464,19 @@
   revision = "38b020c58c99152830334916f25375e6bdbf9567"
 
 [[projects]]
-  branch = "master"
   name = "github.com/spf13/cobra"
-  packages = ["."]
-  revision = "b78744579491c1ceeaaa3b40205e56b0591b93a3"
+  packages = [
+    ".",
+    "doc"
+  ]
+  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
+  version = "v0.0.3"
 
 [[projects]]
-  branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
+  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -931,6 +946,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4cf8191e849d3b72e429b022f8ae52941ea1dcff71d5b1cac68c6645a6b1ed95"
+  inputs-digest = "bd181f8347a9bfa283c301e93adbc69aba37e0cf69456e7df278d9d6c59fe0fe"
   solver-name = "gps-cdcl"
   solver-version = 1
