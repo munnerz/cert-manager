@@ -78,7 +78,7 @@ func (c *Controller) secretDeleted(obj interface{}) {
 }
 
 func (c *Controller) Run(workers int, stopCh <-chan struct{}) error {
-	glog.V(4).Infof("Starting %s control loop", ControllerName)
+	glog.V(4).Infof("Starting %s control loop", controllerName)
 	// wait for all the informer caches we depend on are synced
 	if !cache.WaitForCacheSync(stopCh, c.watchedInformers...) {
 		// TODO: replace with Errorf call to glog
@@ -104,7 +104,7 @@ func (c *Controller) Run(workers int, stopCh <-chan struct{}) error {
 }
 
 func (c *Controller) worker(stopCh <-chan struct{}) {
-	glog.V(4).Infof("Starting %q worker", ControllerName)
+	glog.V(4).Infof("Starting %q worker", controllerName)
 	for {
 		obj, shutdown := c.queue.Get()
 		if shutdown {
@@ -121,7 +121,7 @@ func (c *Controller) worker(stopCh <-chan struct{}) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			ctx = util.ContextWithStopCh(ctx, stopCh)
-			glog.Infof("%s controller: syncing item '%s'", ControllerName, key)
+			glog.Infof("%s controller: syncing item '%s'", controllerName, key)
 			if err := c.syncHandler(ctx, key); err != nil {
 				return err
 			}
@@ -130,14 +130,14 @@ func (c *Controller) worker(stopCh <-chan struct{}) {
 		}(obj)
 
 		if err != nil {
-			glog.Errorf("%s controller: Re-queuing item %q due to error processing: %s", ControllerName, key, err.Error())
+			glog.Errorf("%s controller: Re-queuing item %q due to error processing: %s", controllerName, key, err.Error())
 			c.queue.AddRateLimited(obj)
 			continue
 		}
 
-		glog.Infof("%s controller: Finished processing work item %q", ControllerName, key)
+		glog.Infof("%s controller: Finished processing work item %q", controllerName, key)
 	}
-	glog.V(4).Infof("Exiting %q worker loop", ControllerName)
+	glog.V(4).Infof("Exiting %q worker loop", controllerName)
 }
 
 func (c *Controller) processNextWorkItem(ctx context.Context, key string) error {
@@ -162,13 +162,10 @@ func (c *Controller) processNextWorkItem(ctx context.Context, key string) error 
 }
 
 var keyFunc = controllerpkg.KeyFunc
-
-const (
-	ControllerName = "clusterissuers"
-)
+var controllerName = controllerpkg.ControllerClusterIssuers
 
 func init() {
-	controllerpkg.Register(ControllerName, func(ctx *controllerpkg.Context) controllerpkg.Interface {
+	controllerpkg.Register(controllerName, func(ctx *controllerpkg.Context) controllerpkg.Interface {
 		return New(ctx).Run
 	})
 }

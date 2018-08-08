@@ -9,10 +9,7 @@ import (
 
 	"github.com/jetstack/cert-manager/pkg/util"
 
-	certificatescontroller "github.com/jetstack/cert-manager/pkg/controller/certificates"
-	clusterissuerscontroller "github.com/jetstack/cert-manager/pkg/controller/clusterissuers"
-	ingressshimcontroller "github.com/jetstack/cert-manager/pkg/controller/ingress-shim"
-	issuerscontroller "github.com/jetstack/cert-manager/pkg/controller/issuers"
+	"github.com/jetstack/cert-manager/pkg/controller"
 )
 
 type ControllerOptions struct {
@@ -65,10 +62,10 @@ var (
 	defaultACMEHTTP01SolverImage = fmt.Sprintf("quay.io/jetstack/cert-manager-acmesolver:%s", util.AppVersion)
 
 	defaultEnabledControllers = []string{
-		issuerscontroller.ControllerName,
-		clusterissuerscontroller.ControllerName,
-		certificatescontroller.ControllerName,
-		ingressshimcontroller.ControllerName,
+		controller.ControllerIssuers,
+		controller.ControllerClusterIssuers,
+		controller.ControllerCertificates,
+		controller.ControllerIngressShim,
 	}
 )
 

@@ -25,10 +25,6 @@ import (
 	extinformers "k8s.io/client-go/informers/extensions/v1beta1"
 )
 
-const (
-	ControllerName = "ingress-shim"
-)
-
 type defaults struct {
 	issuerName, issuerKind      string
 	acmeIssuerChallengeType     string
@@ -108,13 +104,13 @@ func (c *Controller) certificateDeleted(obj interface{}) {
 }
 
 func (c *Controller) Run(workers int, stopCh <-chan struct{}) error {
-	glog.V(4).Infof("Starting %s control loop", ControllerName)
+	glog.V(4).Infof("Starting %s control loop", controllerName)
 	// wait for all the informer caches we depend to sync
 	if !cache.WaitForCacheSync(stopCh, c.syncedFuncs...) {
 		return fmt.Errorf("error waiting for informer caches to sync")
 	}
 
-	glog.V(4).Infof("Synced all caches for %s control loop", ControllerName)
+	glog.V(4).Infof("Synced all caches for %s control loop", controllerName)
 
 	for i := 0; i < workers; i++ {
 		c.workerWg.Add(1)
@@ -132,7 +128,7 @@ func (c *Controller) Run(workers int, stopCh <-chan struct{}) error {
 
 func (c *Controller) worker(stopCh <-chan struct{}) {
 	defer c.workerWg.Done()
-	glog.V(4).Infof("Starting %q worker", ControllerName)
+	glog.V(4).Infof("Starting %q worker", controllerName)
 	for {
 		obj, shutdown := c.queue.Get()
 		if shutdown {
@@ -149,7 +145,7 @@ func (c *Controller) worker(stopCh <-chan struct{}) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			ctx = util.ContextWithStopCh(ctx, stopCh)
-			glog.Infof("%s controller: syncing item '%s'", ControllerName, key)
+			glog.Infof("%s controller: syncing item '%s'", controllerName, key)
 			if err := c.syncHandler(ctx, key); err != nil {
 				return err
 			}
@@ -158,14 +154,14 @@ func (c *Controller) worker(stopCh <-chan struct{}) {
 		}(obj)
 
 		if err != nil {
-			glog.Errorf("%s controller: Re-queuing item %q due to error processing: %s", ControllerName, key, err.Error())
+			glog.Errorf("%s controller: Re-queuing item %q due to error processing: %s", controllerName, key, err.Error())
 			c.queue.AddRateLimited(obj)
 			continue
 		}
 
-		glog.Infof("%s controller: Finished processing work item %q", ControllerName, key)
+		glog.Infof("%s controller: Finished processing work item %q", controllerName, key)
 	}
-	glog.V(4).Infof("Exiting %q worker loop", ControllerName)
+	glog.V(4).Infof("Exiting %q worker loop", controllerName)
 }
 
 func (c *Controller) processNextWorkItem(ctx context.Context, key string) error {
@@ -190,9 +186,10 @@ func (c *Controller) processNextWorkItem(ctx context.Context, key string) error 
 }
 
 var keyFunc = controllerpkg.KeyFunc
+var controllerName = controllerpkg.ControllerIngressShim
 
 func init() {
-	controllerpkg.Register(ControllerName, func(ctx *controllerpkg.Context) controllerpkg.Interface {
+	controllerpkg.Register(controllerName, func(ctx *controllerpkg.Context) controllerpkg.Interface {
 		return New(
 			ctx.SharedInformerFactory.Certmanager().V1alpha1().Certificates(),
 			ctx.KubeSharedInformerFactory.Extensions().V1beta1().Ingresses(),
