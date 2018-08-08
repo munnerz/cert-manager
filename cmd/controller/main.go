@@ -20,7 +20,17 @@ import (
 	"syscall"
 
 	"github.com/golang/glog"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"github.com/jetstack/cert-manager/cmd/controller/app"
+	_ "github.com/jetstack/cert-manager/pkg/controller/certificates"
+	_ "github.com/jetstack/cert-manager/pkg/controller/clusterissuers"
+	_ "github.com/jetstack/cert-manager/pkg/controller/ingress-shim"
+	_ "github.com/jetstack/cert-manager/pkg/controller/issuers"
+	_ "github.com/jetstack/cert-manager/pkg/issuer/acme"
+	_ "github.com/jetstack/cert-manager/pkg/issuer/ca"
+	_ "github.com/jetstack/cert-manager/pkg/issuer/selfsigned"
+	_ "github.com/jetstack/cert-manager/pkg/issuer/vault"
 	"github.com/jetstack/cert-manager/pkg/logs"
 )
 
@@ -29,7 +39,7 @@ func main() {
 	defer logs.FlushLogs()
 	stopCh := SetupSignalHandler()
 
-	cmd := NewCommandStartCertManagerController(os.Stdout, os.Stderr, stopCh)
+	cmd := app.NewCommandStartCertManagerController(os.Stdout, os.Stderr, stopCh)
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
 	flag.CommandLine.Parse([]string{})
 	if err := cmd.Execute(); err != nil {
