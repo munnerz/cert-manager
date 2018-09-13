@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # +skip_license_check
 
@@ -59,7 +59,7 @@ def get_refs():
 
 def file_passes(filename, refs, regexs):  # pylint: disable=too-many-locals
     try:
-        with open(filename, 'r') as fp:
+        with open(filename, encoding='utf-8') as fp:
             data = fp.read()
     except IOError:
         return False
@@ -128,7 +128,7 @@ IGNORE_HEADERS = [
 
 
 def has_ignored_header(pathname):
-    with open(pathname, 'r') as myfile:
+    with open(pathname, encoding='utf-8') as myfile:
         data = myfile.read()
         for header in IGNORE_HEADERS:
             if header in data:
