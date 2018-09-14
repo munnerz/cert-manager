@@ -38,7 +38,7 @@ const (
 	ECCurve521 = 521
 )
 
-func GeneratePrivateKeyForCertificate(crt *v1alpha1.Certificate) (crypto.PrivateKey, error) {
+func GeneratePrivateKeyForCertificate(crt *v1alpha1.Certificate) (crypto.Signer, error) {
 	switch crt.Spec.KeyAlgorithm {
 	case v1alpha1.KeyAlgorithm(""), v1alpha1.RSAKeyAlgorithm:
 		keySize := MinRSAKeySize

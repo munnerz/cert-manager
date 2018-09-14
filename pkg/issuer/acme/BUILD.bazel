@@ -6,7 +6,6 @@ go_library(
         "acme.go",
         "issue.go",
         "prepare.go",
-        "renew.go",
         "setup.go",
         "util.go",
     ],

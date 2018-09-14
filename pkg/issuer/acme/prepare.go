@@ -54,7 +54,7 @@ const (
 //
 // It will send the appropriate Letsencrypt authorizations, and complete
 // challenge requests if neccessary.
-func (a *Acme) Prepare(ctx context.Context, crt *v1alpha1.Certificate) error {
+func (a *Acme) prepare(ctx context.Context, crt *v1alpha1.Certificate) error {
 	if crt.Spec.ACME == nil {
 		crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionFalse, errorInvalidConfig, "spec.acme must be specified", false)
 		return fmt.Errorf("spec.acme not specified on certificate %s/%s", crt.Namespace, crt.Name)

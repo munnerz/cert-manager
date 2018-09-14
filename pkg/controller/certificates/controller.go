@@ -41,7 +41,7 @@ type Controller struct {
 	*controllerpkg.Context
 
 	// To allow injection for testing.
-	syncHandler func(ctx context.Context, key string) error
+	syncHandler func(ctx context.Context, key string) (bool, error)
 
 	issuerLister        cmlisters.IssuerLister
 	clusterIssuerLister cmlisters.ClusterIssuerLister
@@ -60,6 +60,7 @@ func New(ctx *controllerpkg.Context) *Controller {
 	ctrl := &Controller{Context: ctx}
 	ctrl.syncHandler = ctrl.processNextWorkItem
 	ctrl.queue = workqueue.NewNamedRateLimitingQueue(workqueue.NewItemExponentialFailureRateLimiter(time.Second*2, time.Minute*1), "certificates")
+
 	// Create a scheduled work queue that calls the ctrl.queue.Add method for
 	// each object in the queue. This is used to schedule re-checks of
 	// Certificate resources when they get near to expiry
@@ -159,21 +160,22 @@ func (c *Controller) worker(stopCh <-chan struct{}) {
 		}
 
 		var key string
-		err := func(obj interface{}) error {
+		forceAdd, err := func(obj interface{}) (bool, error) {
 			defer c.queue.Done(obj)
 			var ok bool
 			if key, ok = obj.(string); !ok {
-				return nil
+				return false, nil
 			}
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			ctx = util.ContextWithStopCh(ctx, stopCh)
 			glog.Infof("%s controller: syncing item '%s'", ControllerName, key)
-			if err := c.syncHandler(ctx, key); err != nil {
-				return err
+
+			forceAdd, err := c.syncHandler(ctx, key)
+			if err == nil {
+				c.queue.Forget(obj)
 			}
-			c.queue.Forget(obj)
-			return nil
+			return forceAdd, err
 		}(obj)
 
 		if err != nil {
@@ -182,16 +184,20 @@ func (c *Controller) worker(stopCh <-chan struct{}) {
 			continue
 		}
 
+		if forceAdd {
+			c.queue.Add(obj)
+		}
+
 		glog.Infof("%s controller: Finished processing work item %q", ControllerName, key)
 	}
 	glog.V(4).Infof("Exiting %q worker loop", ControllerName)
 }
 
-func (c *Controller) processNextWorkItem(ctx context.Context, key string) error {
+func (c *Controller) processNextWorkItem(ctx context.Context, key string) (bool, error) {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		runtime.HandleError(fmt.Errorf("invalid resource key: %s", key))
-		return nil
+		return false, nil
 	}
 
 	crt, err := c.certificateLister.Certificates(namespace).Get(name)
@@ -200,10 +206,10 @@ func (c *Controller) processNextWorkItem(ctx context.Context, key string) error 
 		if k8sErrors.IsNotFound(err) {
 			c.scheduledWorkQueue.Forget(key)
 			runtime.HandleError(fmt.Errorf("certificate '%s' in work queue no longer exists", key))
-			return nil
+			return false, nil
 		}
 
-		return err
+		return false, err
 	}
 
 	return c.Sync(ctx, crt)

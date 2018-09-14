@@ -29,6 +29,7 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
+	"github.com/jetstack/cert-manager/pkg/issuer"
 	"github.com/jetstack/cert-manager/pkg/util"
 	"github.com/jetstack/cert-manager/pkg/util/errors"
 	"github.com/jetstack/cert-manager/pkg/util/kube"
@@ -205,10 +206,19 @@ func (a *Acme) obtainCertificate(ctx context.Context, crt *v1alpha1.Certificate)
 	return keyPem, certBuffer.Bytes(), nil
 }
 
-func (a *Acme) Issue(ctx context.Context, crt *v1alpha1.Certificate) ([]byte, []byte, error) {
+func (a *Acme) Issue(ctx context.Context, crt *v1alpha1.Certificate) (issuer.IssueResponse, error) {
+	err := a.prepare(ctx, crt)
+	if err != nil {
+		return issuer.IssueResponse{}, err
+	}
+
 	key, cert, err := a.obtainCertificate(ctx, crt)
 	if err != nil {
-		return nil, nil, err
+		return issuer.IssueResponse{}, err
 	}
-	return key, cert, err
+
+	return issuer.IssueResponse{
+		PrivateKey:  key,
+		Certificate: cert,
+	}, nil
 }

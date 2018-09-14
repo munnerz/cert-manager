@@ -23,6 +23,7 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
+	"github.com/jetstack/cert-manager/pkg/issuer"
 	"github.com/jetstack/cert-manager/pkg/util/errors"
 	"github.com/jetstack/cert-manager/pkg/util/kube"
 	"github.com/jetstack/cert-manager/pkg/util/pki"
@@ -44,7 +45,7 @@ const (
 	messageCertIssued = "Certificate issued successfully"
 )
 
-func (c *CA) Issue(ctx context.Context, crt *v1alpha1.Certificate) ([]byte, []byte, error) {
+func (c *CA) Issue(ctx context.Context, crt *v1alpha1.Certificate) (issuer.IssueResponse, error) {
 	signeeKey, err := kube.SecretTLSKey(c.secretsLister, crt.Namespace, crt.Spec.SecretName)
 
 	if k8sErrors.IsNotFound(err) || errors.IsInvalidData(err) {
@@ -54,22 +55,21 @@ func (c *CA) Issue(ctx context.Context, crt *v1alpha1.Certificate) ([]byte, []by
 	if err != nil {
 		s := messageErrorGetCertKeyPair + err.Error()
 		crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionFalse, errorGetCertKeyPair, s, false)
-		return nil, nil, err
+		return issuer.IssueResponse{}, err
 	}
 
 	publicKey, err := pki.PublicKeyForPrivateKey(signeeKey)
 	if err != nil {
 		s := messageErrorPublicKey + err.Error()
 		crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionFalse, errorGetPublicKey, s, false)
-		return nil, nil, err
+		return issuer.IssueResponse{}, err
 	}
 
 	certPem, err := c.obtainCertificate(crt, publicKey)
-
 	if err != nil {
 		s := messageErrorIssueCert + err.Error()
 		crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionFalse, errorIssueCert, s, false)
-		return nil, nil, err
+		return issuer.IssueResponse{}, err
 	}
 
 	crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionTrue, successCertIssued, messageCertIssued, true)
@@ -78,10 +78,13 @@ func (c *CA) Issue(ctx context.Context, crt *v1alpha1.Certificate) ([]byte, []by
 	if err != nil {
 		s := messageErrorEncodePrivateKey + err.Error()
 		crt.UpdateStatusCondition(v1alpha1.CertificateConditionReady, v1alpha1.ConditionFalse, errorEncodePrivateKey, s, false)
-		return nil, nil, err
+		return issuer.IssueResponse{}, err
 	}
 
-	return keyPem, certPem, nil
+	return issuer.IssueResponse{
+		PrivateKey:  keyPem,
+		Certificate: certPem,
+	}, nil
 }
 
 func (c *CA) obtainCertificate(crt *v1alpha1.Certificate, signeeKey interface{}) ([]byte, error) {
