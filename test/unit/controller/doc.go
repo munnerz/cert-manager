@@ -14,31 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package test
-
-import (
-	"math/rand"
-	"time"
-)
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-type StringGenerator func(n int) string
-
-const letterBytes = "abcdefghijklmnopqrstuvwxyz0123456789"
-
-func RandStringBytes(n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b)
-}
-
-func FixedString(s string) StringGenerator {
-	return func(n int) string {
-		return s
-	}
-}
+// Package controller contains testing utilities used for constructing fake Contexts
+// which can be used during tests.
+//
+// It should be used for all unit tests that require a set of fake clientsets etc
+// in order to provide test consistency.
+package controller
