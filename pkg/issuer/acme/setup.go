@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/golang/glog"
 	"k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,29 +35,25 @@ import (
 	acmeapi "github.com/jetstack/cert-manager/third_party/crypto/acme"
 )
 
-const (
-	errorAccountRegistrationFailed = "ErrRegisterACMEAccount"
-	errorAccountVerificationFailed = "ErrVerifyACMEAccount"
-
-	successAccountRegistered = "ACMEAccountRegistered"
-	successAccountVerified   = "ACMEAccountVerified"
-
-	messageAccountRegistrationFailed = "Failed to register ACME account: "
-	messageAccountVerificationFailed = "Failed to verify ACME account: "
-	messageAccountRegistered         = "The ACME account was registered with the ACME server"
-	messageAccountVerified           = "The ACME account was verified with the ACME server"
-)
-
 // Setup will verify an existing ACME registration, or create one if not
 // already registered.
 func (a *Acme) Setup(ctx context.Context) (issuer.SetupResponse, error) {
+	err := a.setup(ctx)
+	if err != nil {
+		return issuer.SetupResponse{Requeue: true}, err
+	}
+	return issuer.SetupResponse{}, nil
+}
+
+func (a *Acme) setup(ctx context.Context) error {
 	// check if user has specified a v1 account URL, and set a status condition if so.
 	if newURL, ok := acmev1ToV2Mappings[a.issuer.GetSpec().ACME.Server]; ok {
-		a.issuer.UpdateStatusCondition(v1alpha1.IssuerConditionReady, v1alpha1.ConditionFalse, "InvalidConfig",
-			fmt.Sprintf("Your ACME server URL is set to a v1 endpoint (%s). "+
-				"You should update the spec.acme.server field to %q", a.issuer.GetSpec().ACME.Server, newURL))
-		// return nil so that Setup only gets called again after the spec is updated
-		return issuer.SetupResponse{Requeue: false}, nil
+		a.failedSetup("Config", "Your ACME server URL is set to a v1 endpoint (%s). "+
+			"You should update the spec.acme.server field to %q", a.issuer.GetSpec().ACME.Server, newURL)
+
+		// return nil so that Setup only gets called again after the spec is updated.
+		// This stops us spamming the event log.
+		return nil
 	}
 
 	// if the namespace field is not set, we are working on a ClusterIssuer resource
@@ -73,68 +68,112 @@ func (a *Acme) Setup(ctx context.Context) (issuer.SetupResponse, error) {
 	// If retrieving the private key fails, we catch this case and generate a
 	// new key.
 	cl, err := a.helper.ClientForIssuer(a.issuer)
+
+	if err != nil && !(k8sErrors.IsNotFound(err) || errors.IsInvalidData(err)) {
+		return a.failedSetup("Verify", "Failed to verify ACME account: %v", err)
+	}
+
+	// Here, we handle the case where a private key does not already exist, or
+	// if it does exist, if it is invalid.
 	if k8sErrors.IsNotFound(err) || errors.IsInvalidData(err) {
-		glog.Infof("%s: generating acme account private key %q", a.issuer.GetObjectMeta().Name, a.issuer.GetSpec().ACME.PrivateKey.Name)
+		a.Recorder.Event(a.issuer, v1.EventTypeNormal, "Registering", "Generating new ACME account private key...")
 		accountPrivKey, err := a.createAccountPrivateKey(a.issuer.GetSpec().ACME.PrivateKey, ns)
 		if err != nil {
-			s := messageAccountRegistrationFailed + err.Error()
-			a.issuer.UpdateStatusCondition(v1alpha1.IssuerConditionReady, v1alpha1.ConditionFalse, errorAccountRegistrationFailed, s)
-			return issuer.SetupResponse{Requeue: true}, fmt.Errorf(s)
+			return a.failedSetup("Register", "Failed to generate ACME account private key: %v", err)
 		}
+		// reset the acme account URI, as it will be set further in the control flow
 		a.issuer.GetStatus().ACMEStatus().URI = ""
+
 		cl, err = acme.ClientWithKey(a.issuer, accountPrivKey)
-	} else if err != nil {
-		s := messageAccountVerificationFailed + err.Error()
-		glog.V(4).Infof("%s: %s", a.issuer.GetObjectMeta().Name, s)
-		a.Recorder.Event(a.issuer, v1.EventTypeWarning, errorAccountVerificationFailed, s)
-		return issuer.SetupResponse{Requeue: true}, err
+		if err != nil {
+			return a.failedSetup("Verify", "Failed to verify ACME account: %v", err)
+		}
+	}
+
+	account, err := a.accountExists(ctx, cl)
+	if err != nil {
+		return a.failedSetup("Verify", "Failed to verify ACME account: %v", err)
+	}
+
+	if account != nil {
+		a.Recorder.Event(a.issuer, v1.EventTypeNormal, "Verified", "Verfified existing registration with ACME server")
+		a.issuer.UpdateStatusCondition(v1alpha1.IssuerConditionReady, v1alpha1.ConditionTrue, "Verified", "Verfified existing registration with ACME server")
+		a.issuer.GetStatus().ACMEStatus().URI = account.URL
+		return nil
+	}
+
+	account, err = a.registerAccount(ctx, cl)
+	if err != nil {
+		return a.failedSetup("Register", "Failed to register ACME account: %v", err)
 	}
 
 	// registerAccount will also verify the account exists if it already
 	// exists.
-	account, err := a.registerAccount(ctx, cl)
+	account, err = a.registerAccount(ctx, cl)
 	if err != nil {
-		s := messageAccountVerificationFailed + err.Error()
-		glog.V(4).Infof("%s: %s", a.issuer.GetObjectMeta().Name, s)
-		a.Recorder.Event(a.issuer, v1.EventTypeWarning, errorAccountVerificationFailed, s)
-		a.issuer.UpdateStatusCondition(v1alpha1.IssuerConditionReady, v1alpha1.ConditionFalse, errorAccountRegistrationFailed, s)
-		return issuer.SetupResponse{Requeue: true}, err
+		return a.failedSetup("Register", "Failed to register ACME account: %v", err)
 	}
 
-	glog.Infof("%s: verified existing registration with ACME server", a.issuer.GetObjectMeta().Name)
-	a.issuer.UpdateStatusCondition(v1alpha1.IssuerConditionReady, v1alpha1.ConditionTrue, successAccountRegistered, messageAccountRegistered)
+	a.Recorder.Event(a.issuer, v1.EventTypeNormal, "Registered", "Registered new account with ACME server")
+	a.issuer.UpdateStatusCondition(v1alpha1.IssuerConditionReady, v1alpha1.ConditionTrue, "Registered", "Registered new account with ACME server")
 	a.issuer.GetStatus().ACMEStatus().URI = account.URL
 
-	return issuer.SetupResponse{}, err
+	return nil
 }
 
-// registerAccount will register a new ACME account with the server. If an
-// account with the clients private key already exists, it will attempt to look
-// up and verify the corresponding account, and will return that. If this fails
-// due to a not found error it will register a new account with the given key.
-func (a *Acme) registerAccount(ctx context.Context, cl client.Interface) (*acmeapi.Account, error) {
+// failedSetup will set the ready condition on the issuer, as well as logging
+// an event about the failure.
+// 'stage' will be used as part of the 'reason' string, and should be one of
+// 'Verify' or 'Register' (to create a reason string like FailedVerify or
+// FailedRegister).
+// err should be the error that caused the failure, to be used as the message.
+// This function will always return the error provided, for convinience when
+// using it as part of the Setup function.
+func (a *Acme) failedSetup(stage string, errF string, vals ...interface{}) error {
+	err := fmt.Errorf(errF, vals...)
+	a.issuer.UpdateStatusCondition(v1alpha1.IssuerConditionReady, v1alpha1.ConditionFalse, "Failed"+stage, err.Error())
+	a.Recorder.Event(a.issuer, v1.EventTypeWarning, "Failed"+stage, err.Error())
+	return err
+}
+
+// accountExists will return the existing ACME account for the issuer, if it exists.
+// If an account does not exist, it will return a nil error as well as a nil
+// account.
+// All other errors will be returned.
+func (a *Acme) accountExists(ctx context.Context, cl client.Interface) (*acmeapi.Account, error) {
 	// check if the account already exists
 	acc, err := cl.GetAccount(ctx)
 	if err == nil {
 		return acc, nil
 	}
 
-	// return all errors except for 404 errors (which indicate the account
-	// is not yet registered)
 	acmeErr, ok := err.(*acmeapi.Error)
 	if !ok || (acmeErr.StatusCode != 400 && acmeErr.StatusCode != 404) {
 		return nil, err
 	}
 
-	acc = &acmeapi.Account{
+	return nil, nil
+}
+
+// registerAccount will register a new ACME account with the server. If an
+// account with the clients private key already exists, it will attempt to look
+// up and verify the corresponding account, and will return that. If this fails
+// due to a not found error it will register a new account with the given key.
+// The second return value, a boolean, will be true if the account already existed,
+// i.e. GetAccount returned an account object.
+func (a *Acme) registerAccount(ctx context.Context, cl client.Interface) (*acmeapi.Account, error) {
+	acc := &acmeapi.Account{
 		Contact:     []string{fmt.Sprintf("mailto:%s", strings.ToLower(a.issuer.GetSpec().ACME.Email))},
 		TermsAgreed: true,
 	}
 
-	acc, err = cl.CreateAccount(ctx, acc)
+	acc, err := cl.CreateAccount(ctx, acc)
 	if err != nil {
 		return nil, err
 	}
+
+	a.Recorder.Event(a.issuer, v1.EventTypeNormal, "Registered", "New account registered with ACME server")
+
 	// TODO: re-enable this check once this field is set by Pebble
 	// if acc.Status != acme.StatusValid {
 	// 	return nil, fmt.Errorf("acme account is not valid")
@@ -161,10 +200,11 @@ func (a *Acme) createAccountPrivateKey(sel v1alpha1.SecretKeySelector, ns string
 			sel.Key: pki.EncodePKCS1PrivateKey(accountPrivKey),
 		},
 	})
-
 	if err != nil {
 		return nil, err
 	}
+
+	a.Recorder.Eventf(a.issuer, v1.EventTypeNormal, "Generated", "Generated a new ACME account private key %q", sel.Name)
 
 	return accountPrivKey, err
 }
