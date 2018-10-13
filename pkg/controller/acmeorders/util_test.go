@@ -27,7 +27,7 @@ import (
 
 	"github.com/jetstack/cert-manager/pkg/acme/client"
 	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
-	"github.com/jetstack/cert-manager/pkg/controller/test"
+	testpkg "github.com/jetstack/cert-manager/test/unit/controller"
 )
 
 const (
@@ -37,7 +37,7 @@ const (
 
 type controllerFixture struct {
 	Controller *Controller
-	*test.Builder
+	*testpkg.Builder
 
 	Issuer v1alpha1.GenericIssuer
 	Order  *v1alpha1.Order
@@ -76,7 +76,7 @@ func (f *controllerFixture) Setup(t *testing.T) {
 		//		defaultTestSolverImage,
 		//		default dns01 nameservers
 		//		ambient credentials settings
-		f.Builder = &test.Builder{}
+		f.Builder = &testpkg.Builder{}
 	}
 	f.Controller = f.buildFakeController(f.Builder, f.Issuer)
 	if f.PreFn != nil {
@@ -102,7 +102,7 @@ func (f *controllerFixture) Finish(t *testing.T, args ...interface{}) {
 	}
 }
 
-func (f *controllerFixture) buildFakeController(b *test.Builder, issuer v1alpha1.GenericIssuer) *Controller {
+func (f *controllerFixture) buildFakeController(b *testpkg.Builder, issuer v1alpha1.GenericIssuer) *Controller {
 	b.Start()
 	c := New(b.Context)
 	c.acmeHelper = f

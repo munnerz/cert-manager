@@ -23,7 +23,6 @@ import (
 	"github.com/jetstack/cert-manager/test/util/generate"
 
 	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
-	"github.com/jetstack/cert-manager/pkg/controller/test"
 	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/acmedns"
 	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/azuredns"
 	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/clouddns"
@@ -31,6 +30,7 @@ import (
 	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/rfc2136"
 	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/route53"
 	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/util"
+	testpkg "github.com/jetstack/cert-manager/test/unit/controller"
 )
 
 const (
@@ -43,7 +43,7 @@ const (
 type solverFixture struct {
 	// The Solver under test
 	Solver *Solver
-	*test.Builder
+	*testpkg.Builder
 
 	// Issuer to be passed to functions on the Solver (a default will be used if nil)
 	Issuer v1alpha1.GenericIssuer
@@ -79,7 +79,7 @@ func (s *solverFixture) Setup(t *testing.T) {
 		s.testResources = map[string]interface{}{}
 	}
 	if s.Builder == nil {
-		s.Builder = &test.Builder{}
+		s.Builder = &testpkg.Builder{}
 	}
 	if s.dnsProviders == nil {
 		s.dnsProviders = newFakeDNSProviders()
@@ -101,7 +101,7 @@ func (s *solverFixture) Finish(t *testing.T, args ...interface{}) {
 	}
 }
 
-func buildFakeSolver(b *test.Builder, dnsProviders dnsProviderConstructors) *Solver {
+func buildFakeSolver(b *testpkg.Builder, dnsProviders dnsProviderConstructors) *Solver {
 	b.Start()
 	s := &Solver{
 		Context:                 b.Context,

@@ -26,7 +26,7 @@ import (
 
 	acmecl "github.com/jetstack/cert-manager/pkg/acme/client"
 	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
-	testpkg "github.com/jetstack/cert-manager/pkg/controller/test"
+	testpkg "github.com/jetstack/cert-manager/test/unit/controller"
 	acmeapi "github.com/jetstack/cert-manager/third_party/crypto/acme"
 )
 

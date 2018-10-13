@@ -22,13 +22,13 @@ import (
 	"github.com/jetstack/cert-manager/test/util/generate"
 
 	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
-	"github.com/jetstack/cert-manager/pkg/controller/test"
+	testpkg "github.com/jetstack/cert-manager/test/unit/controller"
 )
 
 type controllerFixture struct {
 	// The Solver under test
 	Controller *Controller
-	Builder    *test.Builder
+	Builder    *testpkg.Builder
 
 	// Issuer to be passed to functions on the Solver (a default will be used if nil)
 	Issuer *v1alpha1.ClusterIssuer
@@ -65,7 +65,7 @@ func (s *controllerFixture) Setup(t *testing.T) {
 		s.testResources = map[string]interface{}{}
 	}
 	if s.Builder == nil {
-		s.Builder = &test.Builder{}
+		s.Builder = &testpkg.Builder{}
 	}
 	s.Builder.Start()
 	s.Controller = New(s.Builder.Context)

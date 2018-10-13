@@ -30,7 +30,7 @@ import (
 	coretesting "k8s.io/client-go/testing"
 
 	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
-	"github.com/jetstack/cert-manager/pkg/controller/test"
+	testpkg "github.com/jetstack/cert-manager/test/unit/controller"
 )
 
 func TestGetIngressesForChallenge(t *testing.T) {
@@ -175,7 +175,7 @@ func TestCleanupIngresses(t *testing.T) {
 			},
 		},
 		"should clean up an ingress with a single challenge path inserted": {
-			Builder: &test.Builder{
+			Builder: &testpkg.Builder{
 				KubeObjects: []runtime.Object{
 					&v1beta1.Ingress{
 						ObjectMeta: metav1.ObjectMeta{

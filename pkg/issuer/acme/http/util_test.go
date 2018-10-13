@@ -19,10 +19,9 @@ package http
 import (
 	"testing"
 
-	"github.com/jetstack/cert-manager/test/util/generate"
-
 	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
-	"github.com/jetstack/cert-manager/pkg/controller/test"
+	testpkg "github.com/jetstack/cert-manager/test/unit/controller"
+	"github.com/jetstack/cert-manager/test/util/generate"
 )
 
 const (
@@ -36,7 +35,7 @@ const (
 type solverFixture struct {
 	// The Solver under test
 	Solver *Solver
-	*test.Builder
+	*testpkg.Builder
 
 	// Issuer to be passed to functions on the Solver (a default will be used if nil)
 	Issuer v1alpha1.GenericIssuer
@@ -70,7 +69,7 @@ func (s *solverFixture) Setup(t *testing.T) {
 		s.testResources = map[string]interface{}{}
 	}
 	if s.Builder == nil {
-		s.Builder = &test.Builder{}
+		s.Builder = &testpkg.Builder{}
 	}
 	s.Solver = buildFakeSolver(s.Builder)
 	if s.PreFn != nil {
@@ -89,7 +88,7 @@ func (s *solverFixture) Finish(t *testing.T, args ...interface{}) {
 	}
 }
 
-func buildFakeSolver(b *test.Builder) *Solver {
+func buildFakeSolver(b *testpkg.Builder) *Solver {
 	b.Start()
 	s := NewSolver(b.Context)
 	b.Sync()

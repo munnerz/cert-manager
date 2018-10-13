@@ -26,10 +26,10 @@ import (
 
 	"github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
 	"github.com/jetstack/cert-manager/pkg/controller"
-	"github.com/jetstack/cert-manager/pkg/controller/test"
 	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/acmedns"
 	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/cloudflare"
 	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/util"
+	testpkg "github.com/jetstack/cert-manager/test/unit/controller"
 )
 
 func newIssuer(name, namespace string, configs []v1alpha1.ACMEIssuerDNS01Provider) *v1alpha1.Issuer {
@@ -69,7 +69,7 @@ func TestSolverFor(t *testing.T) {
 	tests := map[string]testT{
 		"loads secret for cloudflare provider": {
 			solverFixture: &solverFixture{
-				Builder: &test.Builder{
+				Builder: &testpkg.Builder{
 					KubeObjects: []runtime.Object{
 						newSecret("cloudflare-key", "default", map[string][]byte{
 							"api-key": []byte("a-cloudflare-api-key"),
@@ -135,7 +135,7 @@ func TestSolverFor(t *testing.T) {
 		},
 		"fails to load a cloudflare provider with an invalid secret": {
 			solverFixture: &solverFixture{
-				Builder: &test.Builder{
+				Builder: &testpkg.Builder{
 					KubeObjects: []runtime.Object{
 						newSecret("cloudflare-key", "default", map[string][]byte{
 							"api-key-oops": []byte("a-cloudflare-api-key"),
@@ -171,7 +171,7 @@ func TestSolverFor(t *testing.T) {
 		},
 		"fails to load a provider with a non-existent provider set for the domain": {
 			solverFixture: &solverFixture{
-				Builder: &test.Builder{
+				Builder: &testpkg.Builder{
 					KubeObjects: []runtime.Object{
 						newSecret("cloudflare-key", "default", map[string][]byte{
 							"api-key": []byte("a-cloudflare-api-key"),
@@ -207,7 +207,7 @@ func TestSolverFor(t *testing.T) {
 		},
 		"loads json for acmedns provider": {
 			solverFixture: &solverFixture{
-				Builder: &test.Builder{
+				Builder: &testpkg.Builder{
 					KubeObjects: []runtime.Object{
 						newSecret("acmedns-key", "default", map[string][]byte{
 							"acmedns.json": []byte("{}"),
@@ -266,7 +266,7 @@ func TestSolverFor(t *testing.T) {
 
 func TestRoute53TrimCreds(t *testing.T) {
 	f := &solverFixture{
-		Builder: &test.Builder{
+		Builder: &testpkg.Builder{
 			KubeObjects: []runtime.Object{
 				newSecret("route53", "default", map[string][]byte{
 					"secret": []byte("AKIENDINNEWLINE \n"),
@@ -333,7 +333,7 @@ func TestRoute53AmbientCreds(t *testing.T) {
 	}{
 		{
 			solverFixture{
-				Builder: &test.Builder{
+				Builder: &testpkg.Builder{
 					Context: &controller.Context{
 						IssuerOptions: controller.IssuerOptions{
 							IssuerAmbientCredentials: true,
@@ -368,7 +368,7 @@ func TestRoute53AmbientCreds(t *testing.T) {
 		},
 		{
 			solverFixture{
-				Builder: &test.Builder{
+				Builder: &testpkg.Builder{
 					Context: &controller.Context{
 						IssuerOptions: controller.IssuerOptions{
 							IssuerAmbientCredentials: false,
