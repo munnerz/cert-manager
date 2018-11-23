@@ -41,6 +41,7 @@ import (
 	"github.com/jetstack/cert-manager/pkg/util/errors"
 	"github.com/jetstack/cert-manager/pkg/util/kube"
 	"github.com/jetstack/cert-manager/pkg/util/pki"
+	acmeapi "github.com/jetstack/cert-manager/third_party/crypto/acme"
 )
 
 const (
@@ -163,11 +164,24 @@ func (a *Acme) Issue(ctx context.Context, crt *v1alpha1.Certificate) (issuer.Iss
 		return issuer.IssueResponse{}, err
 	}
 
+	// TODO: allow this check to be skipped in instances where the certificate is
+	// already issued and we know it has expired.
+	// This will probably require us to set a 'certificate signature' on the Order
+	// resource, or otherwise make a copy of the signed certificate on the Order
+	// so we can check what certificate the Order is for without querying ACME.
 	// We check the current Order's Certificate resource to see if it's nearing expiry.
 	// If it is, this implies that it is an old order that is now out of date.
 	certSlice, err := cl.GetCertificate(ctx, existingOrder.Status.CertificateURL)
 	if err != nil {
-		// TODO: parse returned ACME error and potentially re-create order.
+		acmeErr, ok := err.(*acmeapi.Error)
+		if !ok {
+			return issuer.IssueResponse{}, err
+		}
+
+		if acmeErr.StatusCode >= 400 && acmeErr.StatusCode < 500 {
+			return a.retryOrder(crt, existingOrder)
+		}
+
 		return issuer.IssueResponse{}, err
 	}
 

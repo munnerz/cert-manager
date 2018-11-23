@@ -43,6 +43,7 @@ import (
 	testpkg "github.com/jetstack/cert-manager/pkg/controller/test"
 	"github.com/jetstack/cert-manager/pkg/issuer"
 	"github.com/jetstack/cert-manager/pkg/util/pki"
+	acmeapi "github.com/jetstack/cert-manager/third_party/crypto/acme"
 )
 
 func generatePrivateKey(t *testing.T) *rsa.PrivateKey {
@@ -258,6 +259,44 @@ func TestIssueHappyPath(t *testing.T) {
 				}
 				if !reflect.DeepEqual(resp.PrivateKey, pkBytes) {
 					t.Errorf("unexpected private key returned: %v", resp.PrivateKey)
+				}
+			},
+			Err: false,
+		},
+		"retry an order if GetCertificate errors with an ACME 4xx error": {
+			Certificate: testCert,
+			Builder: &testpkg.Builder{
+				CertManagerObjects: []runtime.Object{testCertValidOrder},
+				KubeObjects:        []runtime.Object{testCertPrivateKeySecret},
+				ExpectedActions: []testpkg.Action{
+					testpkg.NewAction(
+						coretesting.NewDeleteAction(v1alpha1.SchemeGroupVersion.WithResource("orders"), testCertValidOrder.Namespace, testCertValidOrder.Name),
+					),
+				},
+			},
+			Client: &acmecl.FakeACME{
+				FakeGetCertificate: func(ctx context.Context, url string) ([][]byte, error) {
+					return [][]byte{}, &acmeapi.Error{StatusCode: 404}
+				},
+			},
+			PreFn: func(t *testing.T, s *acmeFixture) {
+			},
+			CheckFn: func(t *testing.T, s *acmeFixture, args ...interface{}) {
+				returnedCert := args[0].(*v1alpha1.Certificate)
+				resp := args[1].(issuer.IssueResponse)
+				// err := args[2].(error)
+
+				if resp.Requeue == true {
+					t.Errorf("expected certificate to not be requeued")
+				}
+				if !reflect.DeepEqual(returnedCert, testCert) {
+					t.Errorf("output was not as expected: %s", pretty.Diff(returnedCert, testCert))
+				}
+				if resp.Certificate != nil {
+					t.Errorf("expected certificate returned to be nil")
+				}
+				if resp.PrivateKey != nil {
+					t.Errorf("expected private key returned to be nil")
 				}
 			},
 			Err: false,
