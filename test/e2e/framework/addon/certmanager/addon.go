@@ -75,7 +75,7 @@ func (p *Certmanager) Setup(cfg *config.Config) error {
 		Tiller:      p.Tiller,
 		ReleaseName: "chart-certmanager-" + p.Name,
 		Namespace:   p.Namespace,
-		ChartName:   cfg.RepoRoot + "/contrib/charts/cert-manager",
+		ChartName:   cfg.RepoRoot + "/deploy/chart",
 		// TODO: move resource requests/limits into Vars so they are always set
 		Values: []string{cfg.RepoRoot + "/test/fixtures/cert-manager-values.yaml"},
 		// doesn't matter when installing from disk

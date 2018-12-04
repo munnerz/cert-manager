@@ -31,6 +31,7 @@ go_test(
     tags = ["manual"],
     deps = [
         "//pkg/logs:go_default_library",
+        "//test/e2e/charts:all-srcs",
         "//test/e2e/framework:go_default_library",
         "//test/e2e/suite:go_default_library",
         "//vendor/github.com/onsi/ginkgo:go_default_library",
