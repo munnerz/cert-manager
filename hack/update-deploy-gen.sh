@@ -28,18 +28,15 @@ cd "${REPO_ROOT}"
 KUBE_VERSION=1.9
 
 gen() {
-	VALUES=$1
-	OUTPUT=$2
+	OUTPUT=$1
 	TMP_OUTPUT=$(mktemp)
 	mkdir -p "$(dirname ${OUTPUT})"
 	helm template \
 		"${REPO_ROOT}/deploy/chart" \
-		--values "${REPO_ROOT}/hack/deploy/${VALUES}.yaml" \
+		--values "${REPO_ROOT}/deploy/manifests/helm-values.yaml" \
 		--kube-version "${KUBE_VERSION}" \
 		--namespace "cert-manager" \
 		--name "cert-manager" \
-		--set "fullnameOverride=cert-manager" \
-        --set "webhook.enabled=true" \
 		--set "createNamespaceResource=true" > "${TMP_OUTPUT}"
 	mv "${TMP_OUTPUT}" "${OUTPUT}"
 }
@@ -47,4 +44,4 @@ gen() {
 export HELM_HOME="$(mktemp -d)"
 helm init --client-only
 helm dep update "${REPO_ROOT}/deploy/chart"
-gen rbac-values "${REPO_ROOT}/deploy/manifests/cert-manager.yaml"
+gen "${REPO_ROOT}/deploy/manifests/cert-manager.yaml"
