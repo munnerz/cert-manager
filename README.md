@@ -1,3 +1,5 @@
+<p align="center"><img src="./logo/logo.png" width="400x" /></p>
+
 # cert-manager
 
 cert-manager is a Kubernetes add-on to automate the management and issuance of
