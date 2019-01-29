@@ -1,4 +1,10 @@
-<p align="center"><img src="./logo/logo.png" width="400x" /></p>
+<p align="center"><img src="./logo/logo.png" width="250x" /></p>
+<p align="center"><a href="https://prow.build-infra.jetstack.net/?job=pull-cert-manager-bazel">
+<!-- prow build badge, godoc, and go report card-->
+<img alt="Build Status" src="https://prow.build-infra.jetstack.net/badge.svg?jobs=pull-cert-manager-bazel">
+</a>
+<a href="https://godoc.org/github.com/jetstack/cert-manager"><img src="https://godoc.org/github.com/jetstack/cert-manager?status.svg"></a>
+<a href="https://goreportcard.com/report/github.com/jetstack/cert-manager"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/jetstack/cert-manager" /></a></p>
 
 # cert-manager
 
