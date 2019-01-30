@@ -1,4 +1,4 @@
-<p align="center"><img src="./logo/logo.png" width="250x" /></p>
+<p align="center"><img src="./logo/logo-photo.png" width="250x" /></p>
 <p align="center"><a href="https://prow.build-infra.jetstack.net/?job=pull-cert-manager-bazel">
 <!-- prow build badge, godoc, and go report card-->
 <img alt="Build Status" src="https://prow.build-infra.jetstack.net/badge.svg?jobs=pull-cert-manager-bazel">
