@@ -31,7 +31,7 @@ cd "${REPO_ROOT}"
 output="$(mktemp -d)"
 controller-gen \
     paths=./pkg/apis/... \
-    crd:trivialVersions=true \
+    crd:trivialVersions=false \
     output:crd:dir="${output}"
 
 echo "Copying files to output file"
