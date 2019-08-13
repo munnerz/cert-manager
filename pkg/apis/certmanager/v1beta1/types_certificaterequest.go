@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +36,6 @@ const (
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.conditions[?(@.type==\"Ready\")].message",priority=1
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC."
 // +kubebuilder:resource:path=certificaterequests,shortName=cr;crs
-// +kubebuilder:storageversion
 type CertificateRequest struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -95,11 +94,6 @@ type CertificateRequestStatus struct {
 	// certificate.
 	// +optional
 	CA []byte `json:"ca,omitempty"`
-
-	// FailureTime stores the time that this CertificateRequest failed. This is
-	// used to influence garbage collection and back-off.
-	// +optional
-	FailureTime *metav1.Time `json:"failureTime,omitempty"`
 }
 
 // CertificateRequestCondition contains condition information for a CertificateRequest.

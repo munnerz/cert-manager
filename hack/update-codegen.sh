@@ -30,8 +30,9 @@ generate-groups.sh "deepcopy" \
   --output-base "${GOPATH}/src/" \
   --go-header-file "${runfiles}/hack/boilerplate/boilerplate.go.txt"
 
-generate-groups.sh "deepcopy,client,informer,lister" \
+generate-groups-internal.sh "conversion,deepcopy,client,informer,lister" \
   github.com/jetstack/cert-manager/pkg/client \
+  github.com/jetstack/cert-manager/pkg/apis \
   github.com/jetstack/cert-manager/pkg/apis \
   certmanager:v1alpha1 \
   --output-base "${GOPATH}/src/" \
