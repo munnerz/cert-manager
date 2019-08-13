@@ -213,7 +213,7 @@ github.com/mattn/go-isatty
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/miekg/dns v0.0.0-20170721150254-0f3adef2e220
 github.com/miekg/dns
-# github.com/mitchellh/go-homedir v1.0.0
+# github.com/mitchellh/go-homedir v1.1.0
 github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
@@ -264,11 +264,12 @@ github.com/onsi/gomega/matchers/support/goraph/bipartitegraph
 github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
-# github.com/openshift/generic-admission-server v1.14.0 => github.com/openshift/generic-admission-server v1.14.0
+# github.com/openshift/generic-admission-server v1.14.0 => github.com/munnerz/generic-admission-server v1.10.1-0.20190813144732-f03ca1d5fbbc
 github.com/openshift/generic-admission-server/pkg/cmd
 github.com/openshift/generic-admission-server/pkg/apiserver
 github.com/openshift/generic-admission-server/pkg/cmd/server
 github.com/openshift/generic-admission-server/pkg/registry/admissionreview
+github.com/openshift/generic-admission-server/pkg/registry/conversionreview
 # github.com/pborman/uuid v1.2.0
 github.com/pborman/uuid
 # github.com/pkg/errors v0.8.1
@@ -295,7 +296,7 @@ github.com/prometheus/procfs/internal/util
 github.com/ryanuber/go-glob
 # github.com/sethgrid/pester v0.0.0-20190127155807-68a33a018ad0
 github.com/sethgrid/pester
-# github.com/spf13/cobra v0.0.3
+# github.com/spf13/cobra v0.0.4
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
@@ -457,7 +458,7 @@ gopkg.in/natefinch/lumberjack.v2
 gopkg.in/tomb.v1
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
-# k8s.io/api v0.0.0-20190718183219-b59d8169aab5 => k8s.io/api v0.0.0-20190718183219-b59d8169aab5
+# k8s.io/api v0.0.0-20190805141119-fdd30b57c827 => k8s.io/api v0.0.0-20190718183219-b59d8169aab5
 k8s.io/api/core/v1
 k8s.io/api/admissionregistration/v1beta1
 k8s.io/api/extensions/v1beta1
@@ -495,7 +496,7 @@ k8s.io/api/storage/v1beta1
 k8s.io/api/authentication/v1
 k8s.io/api/authentication/v1beta1
 k8s.io/api/authorization/v1beta1
-# k8s.io/apiextensions-apiserver v0.0.0-20190718185103-d1ef975d28ce => k8s.io/apiextensions-apiserver v0.0.0-20190718185103-d1ef975d28ce
+# k8s.io/apiextensions-apiserver v0.0.0-20190805143126-cdb999c96590 => k8s.io/apiextensions-apiserver v0.0.0-20190718185103-d1ef975d28ce
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1
@@ -552,7 +553,7 @@ k8s.io/apimachinery/pkg/util/framer
 k8s.io/apimachinery/pkg/api/equality
 k8s.io/apimachinery/pkg/util/rand
 k8s.io/apimachinery/pkg/apis/meta/v1beta1/validation
-# k8s.io/apiserver v0.0.0-20190718184206-a1aa83af71a7 => k8s.io/apiserver v0.0.0-20190718184206-a1aa83af71a7
+# k8s.io/apiserver v0.0.0-20190805142138-368b2058237c => k8s.io/apiserver v0.0.0-20190718184206-a1aa83af71a7
 k8s.io/apiserver/pkg/registry/rest
 k8s.io/apiserver/pkg/server
 k8s.io/apiserver/pkg/server/options
@@ -872,7 +873,7 @@ k8s.io/code-generator/cmd/client-gen/generators/scheme
 k8s.io/code-generator/cmd/client-gen/generators/util
 k8s.io/code-generator/cmd/client-gen/path
 k8s.io/code-generator/pkg/namer
-# k8s.io/component-base v0.0.0-20190718183727-0ececfbe9772 => k8s.io/component-base v0.0.0-20190718183727-0ececfbe9772
+# k8s.io/component-base v0.0.0-20190805141645-3a5e5ac800ae => k8s.io/component-base v0.0.0-20190718183727-0ececfbe9772
 k8s.io/component-base/logs
 k8s.io/component-base/featuregate
 k8s.io/component-base/cli/flag

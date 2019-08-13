@@ -112,6 +112,7 @@ filegroup(
         "//vendor/github.com/openshift/generic-admission-server/pkg/apiserver:all-srcs",
         "//vendor/github.com/openshift/generic-admission-server/pkg/cmd:all-srcs",
         "//vendor/github.com/openshift/generic-admission-server/pkg/registry/admissionreview:all-srcs",
+        "//vendor/github.com/openshift/generic-admission-server/pkg/registry/conversionreview:all-srcs",
         "//vendor/github.com/pborman/uuid:all-srcs",
         "//vendor/github.com/pkg/errors:all-srcs",
         "//vendor/github.com/pmezard/go-difflib/difflib:all-srcs",

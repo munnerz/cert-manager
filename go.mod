@@ -52,7 +52,6 @@ require (
 	github.com/hashicorp/go-version v1.1.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/hashicorp/golang-math-big v0.0.0-20180316142257-561262b71329 // indirect
-	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/vault v0.9.6
 	github.com/jefferai/jsonx v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
@@ -78,7 +77,7 @@ require (
 	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sethgrid/pester v0.0.0-20190127155807-68a33a018ad0 // indirect
-	github.com/spf13/cobra v0.0.3
+	github.com/spf13/cobra v0.0.4
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0
 	github.com/tent/http-link-go v0.0.0-20130702225549-ac974c61c2f9 // indirect
@@ -92,13 +91,13 @@ require (
 	gopkg.in/ini.v1 v1.42.0 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce // indirect
 	gopkg.in/ory-am/dockertest.v3 v3.3.4 // indirect
-	k8s.io/api v0.0.0-20190718183219-b59d8169aab5
-	k8s.io/apiextensions-apiserver v0.0.0-20190718185103-d1ef975d28ce
+	k8s.io/api v0.0.0-20190805141119-fdd30b57c827
+	k8s.io/apiextensions-apiserver v0.0.0-20190805143126-cdb999c96590
 	k8s.io/apimachinery v0.0.0-20190612205821-1799e75a0719
-	k8s.io/apiserver v0.0.0-20190718184206-a1aa83af71a7
+	k8s.io/apiserver v0.0.0-20190805142138-368b2058237c
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/code-generator v0.0.0-20190612205613-18da4a14b22b
-	k8s.io/component-base v0.0.0-20190718183727-0ececfbe9772
+	k8s.io/component-base v0.0.0-20190805141645-3a5e5ac800ae
 	k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a // indirect
 	k8s.io/klog v0.3.1
 	k8s.io/kube-aggregator v0.0.0-20190222095010-0b78038fe9e5
@@ -109,7 +108,7 @@ require (
 	sigs.k8s.io/testing_frameworks v0.1.1
 )
 
-replace github.com/openshift/generic-admission-server => github.com/openshift/generic-admission-server v1.14.0
+replace github.com/openshift/generic-admission-server => github.com/munnerz/generic-admission-server v1.10.1-0.20190813144732-f03ca1d5fbbc
 
 replace sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.2.0-beta.4
 

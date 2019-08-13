@@ -2,24 +2,17 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "go_default_library",
-    srcs = ["apiserver.go"],
-    importmap = "github.com/jetstack/cert-manager/vendor/github.com/openshift/generic-admission-server/pkg/apiserver",
-    importpath = "github.com/openshift/generic-admission-server/pkg/apiserver",
+    srcs = ["conversion_review.go"],
+    importmap = "github.com/jetstack/cert-manager/vendor/github.com/openshift/generic-admission-server/pkg/registry/conversionreview",
+    importpath = "github.com/openshift/generic-admission-server/pkg/registry/conversionreview",
     tags = ["manual"],
     visibility = ["//visibility:public"],
     deps = [
-        "//vendor/github.com/openshift/generic-admission-server/pkg/registry/admissionreview:go_default_library",
-        "//vendor/github.com/openshift/generic-admission-server/pkg/registry/conversionreview:go_default_library",
-        "//vendor/k8s.io/api/admission/v1beta1:go_default_library",
         "//vendor/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/runtime:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/runtime/schema:go_default_library",
-        "//vendor/k8s.io/apimachinery/pkg/runtime/serializer:go_default_library",
-        "//vendor/k8s.io/apimachinery/pkg/version:go_default_library",
         "//vendor/k8s.io/apiserver/pkg/registry/rest:go_default_library",
-        "//vendor/k8s.io/apiserver/pkg/server:go_default_library",
-        "//vendor/k8s.io/client-go/rest:go_default_library",
     ],
 )
 
