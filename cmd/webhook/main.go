@@ -24,12 +24,17 @@ import (
 	"github.com/openshift/generic-admission-server/pkg/cmd"
 	"k8s.io/klog"
 
+	"github.com/jetstack/cert-manager/pkg/api"
+	"github.com/jetstack/cert-manager/pkg/logs"
+	"github.com/jetstack/cert-manager/pkg/webhook/conversion"
 	"github.com/jetstack/cert-manager/pkg/webhook/validation"
 )
 
 var certHook cmd.ValidatingAdmissionHook = &validation.CertificateAdmissionHook{}
 var issuerHook cmd.ValidatingAdmissionHook = &validation.IssuerAdmissionHook{}
 var clusterIssuerHook cmd.ValidatingAdmissionHook = &validation.ClusterIssuerAdmissionHook{}
+
+var certConversionHook cmd.ConversionHook = conversion.NewCertificateConversionHook(logs.Log, api.Scheme)
 
 func main() {
 	// Avoid "logging before flag.Parse" errors from glog
@@ -45,11 +50,11 @@ func main() {
 		runfilewatch(*tlsflagVal)
 	}
 
-	cmd.RunAdmissionServer(
-		certHook,
-		issuerHook,
-		clusterIssuerHook,
-	)
+	//logs.InitLogs(flag.CommandLine)
+	cmd.RunAdmissionServerOptions(cmd.AdmissionServerOptions{
+		AdmissionHooks:  []cmd.AdmissionHook{certHook, issuerHook, clusterIssuerHook},
+		ConversionHooks: []cmd.ConversionHook{certConversionHook},
+	})
 }
 
 func runfilewatch(filename string) {
