@@ -14,6 +14,14 @@ exports_files([
     "go.sum",
 ])
 
+genrule(
+    name = "save_docker_version",
+    outs = ["version"],
+    cmd = "grep ^STABLE_DOCKER_TAG bazel-out/stable-status.txt | awk '{print $$2}' >$@",
+    stamp = 1,
+    visibility = ["//visibility:public"],
+)
+
 container_bundle(
     name = "images",
     images = {
@@ -45,6 +53,7 @@ filegroup(
     name = "all-srcs",
     srcs = [
         ":package-srcs",
+        "//build:all-srcs",
         "//cmd/acmesolver:all-srcs",
         "//cmd/cainjector:all-srcs",
         "//cmd/controller:all-srcs",
