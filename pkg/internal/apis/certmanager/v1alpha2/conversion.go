@@ -36,6 +36,8 @@ func Convert_v1alpha2_CertificateSpec_To_certmanager_CertificateSpec(in *v1alpha
 		out.Subject.Organizations = in.Organization
 	}
 
+	out.Format.Type = certmanager.CertificateFormatType(in.KeyEncoding)
+
 	return nil
 }
 
@@ -49,6 +51,8 @@ func Convert_certmanager_CertificateSpec_To_v1alpha2_CertificateSpec(in *certman
 	} else {
 		out.Organization = nil
 	}
+
+	out.KeyEncoding = v1alpha2.KeyEncoding(in.Format.Type)
 
 	return nil
 }

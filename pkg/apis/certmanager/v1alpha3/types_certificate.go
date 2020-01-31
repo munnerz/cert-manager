@@ -61,11 +61,11 @@ const (
 )
 
 // +kubebuilder:validation:Enum=pkcs1;pkcs8
-type KeyEncoding string
+type CertificateFormatType string
 
 const (
-	PKCS1 KeyEncoding = "pkcs1"
-	PKCS8 KeyEncoding = "pkcs8"
+	PKCS1 CertificateFormatType = "pkcs1"
+	PKCS8 CertificateFormatType = "pkcs8"
 )
 
 // CertificateSpec defines the desired state of Certificate.
@@ -138,11 +138,21 @@ type CertificateSpec struct {
 	// +optional
 	KeyAlgorithm KeyAlgorithm `json:"keyAlgorithm,omitempty"`
 
-	// KeyEncoding is the private key cryptography standards (PKCS)
-	// for this certificate's private key to be encoded in. If provided, allowed
-	// values are "pkcs1" and "pkcs8" standing for PKCS#1 and PKCS#8, respectively.
-	// If KeyEncoding is not specified, then PKCS#1 will be used by default.
-	KeyEncoding KeyEncoding `json:"keyEncoding,omitempty"`
+	// Format specifies configuration options that control the output format of
+	// the private key/certificate bundle stored in `secretName`.
+	// +optional
+	Format CertificateFormat `json:"format"`
+}
+
+// CertificateFormat specifies configuration options that control the output
+// format of a private key and certificate bundle.
+type CertificateFormat struct {
+	// Type denotes the archive-file format for storing the private key and
+	// certificate in `secretName`.
+	// Valid values are `pkcs1` or `pkcs8`.
+	// If not specified, 'pkcs1' will be used by default.
+	// +optional
+	Type CertificateFormatType `json:"type,omitempty"`
 }
 
 // X509Subject Full X509 name specification

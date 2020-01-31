@@ -75,10 +75,10 @@ func ValidateCertificateSpec(crt *cmapi.CertificateSpec, fldPath *field.Path) fi
 	if len(crt.Usages) > 0 {
 		el = append(el, validateUsages(crt, fldPath)...)
 	}
-	switch crt.KeyEncoding {
-	case cmapi.KeyEncoding(""), cmapi.PKCS1, cmapi.PKCS8:
+	switch crt.Format.Type {
+	case "", cmapi.PKCS1, cmapi.PKCS8:
 	default:
-		el = append(el, field.Invalid(fldPath.Child("keyEncoding"), crt.KeyEncoding, "must be either empty or one of pkcs1 or pkcs8"))
+		el = append(el, field.Invalid(fldPath.Child("keyEncoding"), crt.Format.Type, "must be either empty or one of pkcs1 or pkcs8"))
 	}
 	return el
 }
