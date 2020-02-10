@@ -612,9 +612,9 @@ func autoConvert_v1alpha2_CertificateSpec_To_certmanager_CertificateSpec(in *v1a
 	}
 	out.IsCA = in.IsCA
 	out.Usages = *(*[]certmanager.KeyUsage)(unsafe.Pointer(&in.Usages))
-	out.KeySize = in.KeySize
-	out.KeyAlgorithm = certmanager.KeyAlgorithm(in.KeyAlgorithm)
-	out.KeyEncoding = certmanager.KeyEncoding(in.KeyEncoding)
+	// WARNING: in.KeySize requires manual conversion: does not exist in peer-type
+	// WARNING: in.KeyAlgorithm requires manual conversion: does not exist in peer-type
+	// WARNING: in.KeyEncoding requires manual conversion: does not exist in peer-type
 	return nil
 }
 
@@ -628,6 +628,8 @@ func autoConvert_certmanager_CertificateSpec_To_v1alpha2_CertificateSpec(in *cer
 	} else {
 		out.Subject = nil
 	}
+	// WARNING: in.PrivateKey requires manual conversion: does not exist in peer-type
+	// WARNING: in.Format requires manual conversion: does not exist in peer-type
 	out.CommonName = in.CommonName
 	out.Duration = (*v1.Duration)(unsafe.Pointer(in.Duration))
 	out.RenewBefore = (*v1.Duration)(unsafe.Pointer(in.RenewBefore))
@@ -641,9 +643,6 @@ func autoConvert_certmanager_CertificateSpec_To_v1alpha2_CertificateSpec(in *cer
 	}
 	out.IsCA = in.IsCA
 	out.Usages = *(*[]v1alpha2.KeyUsage)(unsafe.Pointer(&in.Usages))
-	out.KeySize = in.KeySize
-	out.KeyAlgorithm = v1alpha2.KeyAlgorithm(in.KeyAlgorithm)
-	out.KeyEncoding = v1alpha2.KeyEncoding(in.KeyEncoding)
 	return nil
 }
 

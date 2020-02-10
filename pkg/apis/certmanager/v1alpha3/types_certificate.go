@@ -52,22 +52,6 @@ type CertificateList struct {
 	Items []Certificate `json:"items"`
 }
 
-// +kubebuilder:validation:Enum=rsa;ecdsa
-type KeyAlgorithm string
-
-const (
-	RSAKeyAlgorithm   KeyAlgorithm = "rsa"
-	ECDSAKeyAlgorithm KeyAlgorithm = "ecdsa"
-)
-
-// +kubebuilder:validation:Enum=pkcs1;pkcs8
-type KeyEncoding string
-
-const (
-	PKCS1 KeyEncoding = "pkcs1"
-	PKCS8 KeyEncoding = "pkcs8"
-)
-
 // CertificateSpec defines the desired state of Certificate.
 // A valid Certificate requires at least one of a CommonName, DNSName, or
 // URISAN to be valid.
@@ -75,6 +59,15 @@ type CertificateSpec struct {
 	// Full X509 name specification (https://golang.org/pkg/crypto/x509/pkix/#Name).
 	// +optional
 	Subject *X509Subject `json:"subject,omitempty"`
+
+	// PrivateKey configures options for the private key used with this
+	// certificate.
+	// +optional
+	PrivateKey PrivateKeyConfig `json:"privateKey"`
+
+	// Format configures the output format of the named `secretName` Secret
+	// resource.
+	Format CertificateFormat `json:"format"`
 
 	// CommonName is a common name to be used on the Certificate.
 	// The CommonName should have a length of 64 characters or fewer to avoid
@@ -122,13 +115,34 @@ type CertificateSpec struct {
 	// Usages is the set of x509 actions that are enabled for a given key. Defaults are ('digital signature', 'key encipherment') if empty
 	// +optional
 	Usages []KeyUsage `json:"usages,omitempty"`
+}
 
+type CertificateFormat struct {
+	// CertificateFormatType is the private key cryptography standards (PKCS)
+	// for this certificate's private key to be encoded in. If provided, allowed
+	// values are "pkcs1" and "pkcs8" standing for PKCS#1 and PKCS#8, respectively.
+	// If Type is not specified, then PKCS#1 will be used by default.
+	// +kubebuilder:default=pkcs1
+	Type CertificateFormatType `json:"keyEncoding,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=pkcs1;pkcs8
+type CertificateFormatType string
+
+const (
+	PKCS1 CertificateFormatType = "pkcs1"
+	PKCS8 CertificateFormatType = "pkcs8"
+)
+
+// PrivateKeyConfig contains configuration for a private key associated with
+// a Certificate object.
+type PrivateKeyConfig struct {
 	// KeySize is the key bit size of the corresponding private key for this certificate.
 	// If provided, value must be between 2048 and 8192 inclusive when KeyAlgorithm is
 	// empty or is set to "rsa", and value must be one of (256, 384, 521) when
 	// KeyAlgorithm is set to "ecdsa".
 	// +optional
-	KeySize int `json:"keySize,omitempty"`
+	Size int `json:"size,omitempty"`
 
 	// KeyAlgorithm is the private key algorithm of the corresponding private key
 	// for this certificate. If provided, allowed values are either "rsa" or "ecdsa"
@@ -136,14 +150,16 @@ type CertificateSpec struct {
 	// key size of 256 will be used for "ecdsa" key algorithm and
 	// key size of 2048 will be used for "rsa" key algorithm.
 	// +optional
-	KeyAlgorithm KeyAlgorithm `json:"keyAlgorithm,omitempty"`
-
-	// KeyEncoding is the private key cryptography standards (PKCS)
-	// for this certificate's private key to be encoded in. If provided, allowed
-	// values are "pkcs1" and "pkcs8" standing for PKCS#1 and PKCS#8, respectively.
-	// If KeyEncoding is not specified, then PKCS#1 will be used by default.
-	KeyEncoding KeyEncoding `json:"keyEncoding,omitempty"`
+	Algorithm KeyAlgorithm `json:"algorithm,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=rsa;ecdsa
+type KeyAlgorithm string
+
+const (
+	RSAKeyAlgorithm   KeyAlgorithm = "rsa"
+	ECDSAKeyAlgorithm KeyAlgorithm = "ecdsa"
+)
 
 // X509Subject Full X509 name specification
 type X509Subject struct {

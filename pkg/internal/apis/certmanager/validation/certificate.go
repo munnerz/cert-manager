@@ -52,21 +52,20 @@ func ValidateCertificateSpec(crt *cmapi.CertificateSpec, fldPath *field.Path) fi
 	if len(crt.IPAddresses) > 0 {
 		el = append(el, validateIPAddresses(crt, fldPath)...)
 	}
-	if crt.KeySize < 0 {
-		el = append(el, field.Invalid(fldPath.Child("keySize"), crt.KeySize, "cannot be less than zero"))
+	if crt.PrivateKey.Size < 0 {
+		el = append(el, field.Invalid(fldPath.Child("privateKey", "size"), crt.PrivateKey.Size, "cannot be less than zero"))
 	}
-	switch crt.KeyAlgorithm {
-	case cmapi.KeyAlgorithm(""):
+	switch crt.PrivateKey.Algorithm {
 	case cmapi.RSAKeyAlgorithm:
-		if crt.KeySize > 0 && (crt.KeySize < 2048 || crt.KeySize > 8192) {
-			el = append(el, field.Invalid(fldPath.Child("keySize"), crt.KeySize, "must be between 2048 & 8192 for rsa keyAlgorithm"))
+		if crt.PrivateKey.Size > 0 && (crt.PrivateKey.Size < 2048 || crt.PrivateKey.Size > 8192) {
+			el = append(el, field.Invalid(fldPath.Child("privateKey", "size"), crt.PrivateKey.Size, "must be between 2048 & 8192 for rsa keyAlgorithm"))
 		}
 	case cmapi.ECDSAKeyAlgorithm:
-		if crt.KeySize > 0 && crt.KeySize != 256 && crt.KeySize != 384 && crt.KeySize != 521 {
-			el = append(el, field.NotSupported(fldPath.Child("keySize"), crt.KeySize, []string{"256", "384", "521"}))
+		if crt.PrivateKey.Size > 0 && crt.PrivateKey.Size != 256 && crt.PrivateKey.Size != 384 && crt.PrivateKey.Size != 521 {
+			el = append(el, field.NotSupported(fldPath.Child("privateKey", "size"), crt.PrivateKey.Size, []string{"256", "384", "521"}))
 		}
 	default:
-		el = append(el, field.Invalid(fldPath.Child("keyAlgorithm"), crt.KeyAlgorithm, "must be either empty or one of rsa or ecdsa"))
+		el = append(el, field.Invalid(fldPath.Child("privateKey", "algorithm"), crt.PrivateKey.Algorithm, "must be either empty or one of rsa or ecdsa"))
 	}
 
 	if crt.Duration != nil || crt.RenewBefore != nil {
@@ -75,10 +74,10 @@ func ValidateCertificateSpec(crt *cmapi.CertificateSpec, fldPath *field.Path) fi
 	if len(crt.Usages) > 0 {
 		el = append(el, validateUsages(crt, fldPath)...)
 	}
-	switch crt.KeyEncoding {
-	case cmapi.KeyEncoding(""), cmapi.PKCS1, cmapi.PKCS8:
+	switch crt.Format.Type {
+	case "", cmapi.PKCS1, cmapi.PKCS8:
 	default:
-		el = append(el, field.Invalid(fldPath.Child("keyEncoding"), crt.KeyEncoding, "must be either empty or one of pkcs1 or pkcs8"))
+		el = append(el, field.Invalid(fldPath.Child("format", "type"), crt.Format.Type, "must be either empty or one of pkcs1 or pkcs8"))
 	}
 	return el
 }

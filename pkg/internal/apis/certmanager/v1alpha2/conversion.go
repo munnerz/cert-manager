@@ -36,6 +36,10 @@ func Convert_v1alpha2_CertificateSpec_To_certmanager_CertificateSpec(in *v1alpha
 		out.Subject.Organizations = in.Organization
 	}
 
+	out.PrivateKey.Algorithm = certmanager.KeyAlgorithm(in.KeyAlgorithm)
+	out.PrivateKey.Size = in.KeySize
+	out.Format.Type = certmanager.CertificateFormatType(in.KeyEncoding)
+
 	return nil
 }
 
@@ -49,6 +53,10 @@ func Convert_certmanager_CertificateSpec_To_v1alpha2_CertificateSpec(in *certman
 	} else {
 		out.Organization = nil
 	}
+
+	out.KeySize = in.PrivateKey.Size
+	out.KeyAlgorithm = v1alpha2.KeyAlgorithm(in.PrivateKey.Algorithm)
+	out.KeyEncoding = v1alpha2.KeyEncoding(in.Format.Type)
 
 	return nil
 }
