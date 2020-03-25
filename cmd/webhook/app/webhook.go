@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/jetstack/cert-manager/cmd/webhook/app/options"
 	"github.com/jetstack/cert-manager/pkg/logs"
@@ -42,6 +43,19 @@ func RunServer(log logr.Logger, opts options.WebhookOptions, stopCh <-chan struc
 			CertPath: opts.TLSCertFile,
 			KeyPath:  opts.TLSKeyFile,
 			Log:      log,
+		}
+	case opts.TLSServingSecretNamespace != "" || opts.TLSServingSecretName != "":
+		restcfg, err := clientcmd.BuildConfigFromFlags("", opts.Kubeconfig)
+		if err != nil {
+			return err
+		}
+
+		log.Info("using TLS certificate stored in Secret resource", "secret_namespace", opts.TLSServingSecretNamespace, "secret_name", opts.TLSServingSecretName)
+		source = &tls.SecretCertificateSource{
+			SecretNamespace: opts.TLSServingSecretNamespace,
+			SecretName:      opts.TLSServingSecretName,
+			RESTConfig:      restcfg,
+			Log:             log,
 		}
 	default:
 		log.Info("warning: serving insecurely as tls certificate data not provided")

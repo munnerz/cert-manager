@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "file_source.go",
+        "secret_source.go",
         "source.go",
     ],
     importpath = "github.com/jetstack/cert-manager/pkg/webhook/server/tls",
@@ -11,6 +12,13 @@ go_library(
     deps = [
         "//pkg/logs:go_default_library",
         "@com_github_go_logr_logr//:go_default_library",
+        "@io_k8s_api//core/v1:go_default_library",
+        "@io_k8s_apimachinery//pkg/apis/meta/v1:go_default_library",
+        "@io_k8s_apimachinery//pkg/fields:go_default_library",
+        "@io_k8s_client_go//informers:go_default_library",
+        "@io_k8s_client_go//kubernetes:go_default_library",
+        "@io_k8s_client_go//rest:go_default_library",
+        "@io_k8s_client_go//tools/cache:go_default_library",
         "@io_k8s_sigs_controller_runtime//pkg/log:go_default_library",
     ],
 )
