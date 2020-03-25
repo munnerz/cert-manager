@@ -26,8 +26,19 @@ type WebhookOptions struct {
 
 	// Path to TLS certificate and private key on disk.
 	// Both must be specified if either is.
+	// May not be specified if TLSServingSecretNamespace and
+	// TLSServingSecretName are set.
 	TLSCertFile string
 	TLSKeyFile  string
+
+	// Namespace and name of the Secret resource containing the
+	// TLS certificate to be used to serve with.
+	// Both must be specified if either is.
+	// May not be specified if TLSCertFile and TLSKeyFile are set.
+	TLSServingSecretNamespace string
+	TLSServingSecretName      string
+	// Optional path to the kubeconfig used to connect to the apiserver.
+	Kubeconfig string
 
 	TLSCipherSuites []string
 }
@@ -38,6 +49,9 @@ func (o *WebhookOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.IntVar(&o.HealthzPort, "healthz-port", 6080, "port number to listen on for insecure healthz connections")
 	fs.StringVar(&o.TLSCertFile, "tls-cert-file", "", "path to the file containing the TLS certificate to serve with")
 	fs.StringVar(&o.TLSKeyFile, "tls-private-key-file", "", "path to the file containing the TLS private key to serve with")
+	fs.StringVar(&o.TLSServingSecretNamespace, "tls-serving-secret-namespace", "", "namespace of the secret containing the serving certificate to listen with")
+	fs.StringVar(&o.TLSServingSecretName, "tls-serving-secret-name", "", "name of the secret containing the serving certificate to listen with")
+	fs.StringVar(&o.Kubeconfig, "kubeconfig", "", "optional path to the kubeconfig used to connect to the apiserver. If not specified, in-cluster-config will be used")
 	fs.StringSliceVar(&o.TLSCipherSuites, "tls-cipher-suites", defaultCipherSuites, "comma separated list of TLS 1.2 cipher suites to use (TLS 1.3 cipher suites are not configurable)")
 }
 
