@@ -56,8 +56,8 @@ spec:
           - --v={{ .Values.global.logLevel }}
           {{- end }}
           - --secure-port={{ .Values.webhook.securePort }}
-          - --tls-cert-file=/certs/tls.crt
-          - --tls-private-key-file=/certs/tls.key
+          - --serving-secret-namespace={{ .Relase.Namespace }}
+          - --service-secret-name={{ include "webhook.servingCertificate" . }}
         {{- if .Values.webhook.extraArgs }}
 {{ toYaml .Values.webhook.extraArgs | indent 10 }}
         {{- end }}
@@ -78,13 +78,6 @@ spec:
                 fieldPath: metadata.namespace
           resources:
 {{ toYaml .Values.webhook.resources | indent 12 }}
-          volumeMounts:
-          - name: certs
-            mountPath: /certs
-      volumes:
-      - name: certs
-        secret:
-          secretName: {{ include "webhook.servingCertificate" . }}
     {{- with .Values.webhook.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}
