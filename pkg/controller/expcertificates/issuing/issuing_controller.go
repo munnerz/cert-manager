@@ -171,6 +171,35 @@ func (c *controller) ProcessItem(ctx context.Context, key string) error {
 		return nil
 	}
 
+	// Fetch and parse the 'next private key secret'
+	nextPrivateKeySecret, err := c.secretLister.Secrets(crt.Namespace).Get(*crt.Status.NextPrivateKeySecretName)
+	if apierrors.IsNotFound(err) {
+		log.V(logf.DebugLevel).Info("Next private key secret does not exist, waiting for keymanager controller")
+		// If secret does not exist, do nothing (keymanager will handle this).
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if nextPrivateKeySecret.Data == nil || len(nextPrivateKeySecret.Data[corev1.TLSPrivateKeyKey]) == 0 {
+		logf.WithResource(log, nextPrivateKeySecret).Info("Next private key secret does not contain any private key data, waiting for keymanager controller")
+		return nil
+	}
+	pk, pkData, err := utilkube.ParseTLSKeyFromSecret(nextPrivateKeySecret, corev1.TLSPrivateKeyKey)
+	if err != nil {
+		// If the private key cannot be parsed here, do nothing as the key manager will handle this.
+		logf.WithResource(log, nextPrivateKeySecret).Error(err, "failed to parse next private key, waiting for keymanager controller")
+		return nil
+	}
+	pkVioations, err := certificates.PrivateKeyMatchesSpec(pk, crt.Spec)
+	if err != nil {
+		return err
+	}
+	if len(pkVioations) > 0 {
+		logf.WithResource(log, nextPrivateKeySecret).Info("stored next private key does not match requirements on Certificate resource, waiting for keymanager controller", "violations", pkVioations)
+		return nil
+	}
+
 	// CertificateRequest revisions begin from 1. If no revision is set on the
 	// status then assume no revision yet set.
 	nextRevision := 1
@@ -193,6 +222,39 @@ func (c *controller) ProcessItem(ctx context.Context, key string) error {
 
 	req := reqs[0]
 	log = logf.WithResource(log, req)
+
+	cond := apiutil.GetCertificateRequestCondition(req, cmapi.CertificateRequestConditionReady)
+	if cond == nil {
+		log.V(4).Info("CertificateRequest does not have Ready condition, waiting...")
+		return nil
+	}
+
+	csr, err := utilpki.DecodeX509CertificateRequestBytes(req.Spec.CSRPEM)
+	if err != nil {
+		return err
+	}
+
+	publicKeyMatchesCSR, err := utilpki.PublicKeyMatchesCSR(pk.Public(), req)
+	if err != nil {
+		return err
+	}
+	// If public key does not match, do nothing (keymanager will handle this).
+	if !publicKeyMatchesCSR {
+		logf.WithResource(log, nextPrivateKeySecret).Info("next private key does not match CSR public key, waiting for keymanager controller")
+		return nil
+	}
+
+	// Verify the CSR options match what is requested in certificate.spec.
+	violations, err := certificates.RequestMatchesSpec(req, crt.Spec)
+	if err != nil {
+		return err
+	}
+
+	// If there are violations in the spec, then the requestmanager will handle this.
+	if len(violations) > 0 {
+		log.Info("CertificateRequest does not match Certificate")
+		return nil
+	}
 
 	cond := apiutil.GetCertificateRequestCondition(req, cmapi.CertificateRequestConditionReady)
 	if cond == nil {
